@@ -1,2 +1,2 @@
 # MDW
-Marathon du web : Porjet Montpellier à l'écran
+Marathon du web : Projet Montpellier à l'écran
