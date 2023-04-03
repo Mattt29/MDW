@@ -30,7 +30,7 @@
                 .addTo(map);
 
                 $.ajax({
-                    url: "data/toponymes_corrigé.geojson",
+                    url: "toponymes_corrigé.geojson",
                     dataType: "json", 
                     success: function(topo){
                         console.log(topo);
@@ -55,7 +55,7 @@
                 });
 
                 $.ajax({
-                    url: "data/routes_corrigé.geojson",
+                    url: "routes_corrigé.geojson",
                     dataType: "json", 
                     success: function(routes){
                         console.log(routes.features[0]);
@@ -80,7 +80,7 @@
                 });
 
                 $.ajax({
-                    url: "data/communes_corrigé.geojson",
+                    url: "communes_corrigé.geojson",
                     dataType: "json", 
                     success: function(communes){
                         console.log(communes);
