@@ -8,6 +8,12 @@
 		
         <link rel="stylesheet" href="Leaflet/leaflet.css" /> 
         <script src="Leaflet/leaflet.js"></script>
+        <script src="jquery-3.6.3.min.js"></script>
+
+        <link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.css" />
+        <link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.Default.css" />
+        <script src="Leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
         <link rel="stylesheet" media="screen" type="text/css" href="style.css"/>
 
 	</head>
@@ -19,9 +25,75 @@
         <script type="text/javascript">
 
             var map = L.map('divmap');
-            map.setView([43.610769 ,3.876716],12);
+            map.setView([43.610769 ,3.876716],11);
             L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>', maxZoom:17, minZoom:9}) 
                 .addTo(map);
+
+                $.ajax({
+                    url: "toponymes_corrigé.geojson",
+                    dataType: "json", 
+                    success: function(topo){
+                        console.log(topo);
+
+                        var filmIcon = L.icon({
+                            iconUrl: "film.png",
+                            iconSize: [25,25]
+                        })
+
+                        var filmLayer = L.geoJson(topo,{ pointToLayer: function(feature,latlng){
+                            var marker = L.marker(latlng,{icon: filmIcon});
+                            marker.bindPopup(feature.properties.GRAPHIE);
+                            return marker;
+                        }});
+
+                        var clusters = L.markerClusterGroup();
+                        clusters.addLayer(filmLayer);
+                        map.addLayer(clusters);
+
+                        
+                    }
+                });
+
+                $.ajax({
+                    url: "routes_corrigé.geojson",
+                    dataType: "json", 
+                    success: function(routes){
+                        console.log(routes.features[0]);
+
+
+                        L.geoJson(routes,{
+                            style: function(feature){
+                                if (feature.id == 2123){
+                                    return {
+                                        color : "red",
+                                    };
+                                }
+                                else{
+                                    return {
+                                        color : "black",
+                                    };
+                                }
+
+                            }
+                        }).addTo(map);                        
+                    }
+                });
+
+                $.ajax({
+                    url: "communes_corrigé.geojson",
+                    dataType: "json", 
+                    success: function(communes){
+                        console.log(communes);
+
+                        L.geoJson(communes,{
+                            style: function(feature){
+                                return {
+                                    opacity : 0.2
+                                };
+                            }
+                        }).addTo(map);                        
+                    }
+                });
 
         </script>
 
