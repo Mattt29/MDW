@@ -1,101 +1,200 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Films Montpellier</title>
-        
-		<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-		
-        <link rel="stylesheet" href="https://mattt29.github.io/MDW/Leaflet/leaflet.css" /> 
-        <script src="https://mattt29.github.io/MDW/Leaflet/leaflet.js"></script>
-        <script src="https://mattt29.github.io/MDW/jquery-3.6.4.min.js"></script>
 
-        <link rel="stylesheet" href="https://mattt29.github.io/MDW/Leaflet.markercluster/dist/MarkerCluster.css" />
-        <link rel="stylesheet" href="https://mattt29.github.io/MDW/Leaflet.markercluster/dist/MarkerCluster.Default.css" />
-        <script src="https://mattt29.github.io/MDW/Leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+<head>
+    <title>Films Montpellier</title>
 
-        <link rel="stylesheet" media="screen" type="text/css" href="https://mattt29.github.io/MDW/style.css"/>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 
-	</head>
-	<body>
-        <h1>Cartographie des films tournés à Montpellier</h1>
+    <link rel="stylesheet" href="Leaflet/leaflet.css" />
+    <script src="Leaflet/leaflet.js"></script>
+    <script src="jquery-3.6.4.min.js"></script>
 
-        <div id="divmap"></div>
+    <link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <script src="Leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
-        <script type="text/javascript">
+    <link rel="stylesheet" media="screen" type="text/css" href="style.css" />
 
-            var map = L.map('divmap');
-            map.setView([43.610769 ,3.876716],11);
-            L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>', maxZoom:17, minZoom:9}) 
-                .addTo(map);
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+    <!-- Bootstrap JavaScript -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+
+</head>
+
+<body>
+    <h1>Cartographie des tournages à Montpellier</h1>
+
+    <div class="container">
+        <h1>Mon application</h1>
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs">
+            <li><a href="#accueil" data-toggle="tab">Accueil</a></li>
+            <li class="active"><a href="#cartographie" data-toggle="tab">Cartographie</a></li>
+            <li><a href="#statistiques" data-toggle="tab">Statistiques</a></li>
+            <li><a href="#submit" data-toggle="tab">Submit</a></li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <!-- Accueil Tab -->
+            <div class="tab-pane" id="accueil">
+                <h2>Accueil</h2>
+                <p>Joli accueil</p>
+            </div>
+
+            <!-- Cartographie Tab -->
+            <div class="tab-pane active" id="cartographie">
+                <h2>Cartographie</h2>
+                <div id="divmap" style="height: 500px;"></div>
+            </div>
+
+            <!-- Statistiques Tab -->
+            <div class="tab-pane" id="statistiques">
+                <h2>Statistiques</h2>
+                <p>Affichage des statistiques ici...</p>
+            </div>
+
+            <!-- Submit Tab -->
+            <div class="tab-pane" id="submit">
+                <h2>Submit</h2>
+                <form id="myForm">
+                    <div class="form-group">
+                        <label for="nom">Nom :</label>
+                        <input type="text" class="form-control" id="nom" name="nom">
+                    </div>
+                    <div class="form-group">
+                        <label for="prenom">Prénom :</label>
+                        <input type="text" class="form-control" id="prenom" name="prenom">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Soumettre</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+
+        $.ajax({
+            url: "data/data_tournages_2021_true.json",
+            dataType: "json",
+            success: function (data) {
+                var map = L.map('divmap');
+                map.setView([43.610769, 3.876716], 11);
+                L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>', maxZoom: 17, minZoom: 9 })
+                    .addTo(map);
 
                 $.ajax({
-                    url: "https://mattt29.github.io/MDW/toponymes_corrigé.geojson",
-                    dataType: "json", 
-                    success: function(topo){
+                    url: "toponymes_corrigé.geojson",
+                    dataType: "json",
+                    success: function (topo) {
                         console.log(topo);
 
-                        var filmIcon = L.icon({
-                            iconUrl: "https://mattt29.github.io/MDW/film.png",
-                            iconSize: [25,25]
-                        })
+                        var filmLayer = L.geoJson(topo, {
+                            pointToLayer: function (feature, latlng) {
 
-                        var filmLayer = L.geoJson(topo,{ pointToLayer: function(feature,latlng){
-                            var marker = L.marker(latlng,{icon: filmIcon});
-                            marker.bindPopup(feature.properties.GRAPHIE);
-                            return marker;
-                        }});
+                                const colonnesIndices = ["Lieux", "infos compl", "Genre", "Nom_projet", "Nombre_jours", "debut_tourn", "Production", "Realisateur"];
+                                var idRecherche = feature.id;
+
+                                // Filtrer les lignes correspondantes à l'identifiant recherché
+                                const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_toponymes'] === idRecherche);
+
+                                // Extraire les valeurs des colonnes souhaitées pour les lignes correspondantes
+                                var valeursColonnes = lignesFiltrees.map(ligne => colonnesIndices.map(indice => ligne[indice]));
+
+                                //console.log(valeursColonnes.length);
+                                //var valeursColonnes = valeursColonnes.filter(val => val !== '').join('<br>');
+                                var popupContent = '';
+                                valeursColonnes.forEach(function (valeur, indice) {
+                                    val = '';
+
+                                    valeur.forEach(function (value, index) {
+                                        val += colonnesIndices[index] + ':' + value + '</br>';
+                                    });
+                                    popupContent += '<p><strong>' + valeursColonnes[indice][3] + ':</strong> ' + val + '</br>' + '</p>';
+                                });
+
+                                var tailleBaseIcone = 20;
+                                var taillePixelParValeur = 1;
+                                var nombreDeValeurs = valeursColonnes.reduce(function (total, valeur) {
+                                    return total + valeur.length;
+                                }, 0);
+                                var tailleIcone = tailleBaseIcone + nombreDeValeurs * taillePixelParValeur;
+
+                                var filmIcon = L.icon({
+                                    iconUrl: "film.png",
+                                    iconSize: [tailleIcone, tailleIcone]
+                                })
+
+                                var marker = L.marker(latlng, { icon: filmIcon });
+
+                                marker.on('mouseover', function (e) {
+                                    this.bindTooltip(popupContent).openTooltip();
+                                });
+
+                                // Afficher un div avec les informations du tournage lorsqu'on clique sur le marqueur
+                                marker.on('click', function (e) {
+                                    document.getElementById("popup-info").innerHTML = popupContent;
+                                });
+
+                                return marker;
+                            }
+                        });
 
                         var clusters = L.markerClusterGroup();
                         clusters.addLayer(filmLayer);
                         map.addLayer(clusters);
 
-                        
+
                     }
                 });
 
                 $.ajax({
-                    url: "https://mattt29.github.io/MDW/routes_corrigé.geojson",
-                    dataType: "json", 
-                    success: function(routes){
-                        console.log(routes.features[0]);
+                    url: "routes_corrigé.geojson",
+                    dataType: "json",
+                    success: function (routes) {
 
+                        L.geoJson(routes, {
 
-                        L.geoJson(routes,{
-                            style: function(feature){
-                                if (feature.id == 2123){
-                                    return {
-                                        color : "red",
-                                    };
-                                }
-                                else{
-                                    return {
-                                        color : "black",
-                                    };
-                                }
-
-                            }
-                        }).addTo(map);                        
-                    }
-                });
-
-                $.ajax({
-                    url: "https://mattt29.github.io/MDW/communes_corrigé.geojson",
-                    dataType: "json", 
-                    success: function(communes){
-                        console.log(communes);
-
-                        L.geoJson(communes,{
-                            style: function(feature){
+                            style: function (feature) {
+                                const idRecherche = feature.id;
+                                const lignes = data.tournages_2021.filter(ligne => ligne['id_routes_nommees'] == idRecherche);
+                                var nbValeurs = lignes.length;
                                 return {
-                                    opacity : 0.2
+                                    color: "black",
+                                    weight: nbValeurs * 2
+
                                 };
                             }
-                        }).addTo(map);                        
+
+                        }).addTo(map);
                     }
                 });
 
-        </script>
+                $.ajax({
+                    url: "communes_corrigé.geojson",
+                    dataType: "json",
+                    success: function (communes) {
+                        console.log(communes);
 
+                        L.geoJson(communes, {
+                            style: function (feature) {
+                                return {
+                                    opacity: 0.2
+                                };
+                            }
+                        }).addTo(map);
+                    }
+                });
+            }
+        });
 
-	</body>
+    </script>
+
+    <div id="popup-info">Cliquer sur un marqueur pour afficher les informations</div>
+
+</body>
+
 </html>

@@ -1,7 +1,7 @@
 import pandas as pd
 import json
 
-file = 'data/data_tournages_2021_correct.xlsx'
+file = 'data/data_tournages_2021.xlsx'
 tournages = pd.read_excel(file)
 tournages['id_toponymes'] = tournages['id_toponymes'].fillna(-1).astype(int)
 tournages['id_routes_nommees'] = tournages['id_routes_nommees'].fillna(-1).astype(int)
