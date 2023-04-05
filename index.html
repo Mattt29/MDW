@@ -165,6 +165,8 @@
                             }
                         }).addTo(map);
 
+                        L.control.scale().addTo(map);
+
 
 
                         function showToponymes() {
@@ -227,18 +229,21 @@
                     dataType: "json",
                     success: function (communes) {
 
+                        var originalStyle = {
+                            fillOpacity: 0.1,
+                            color: "skyblue",
+                            weight: 1,
+                            highlight: {
+                                weight: 4,
+                                dashArray: ''
+                            }
+                        };
+
+
                         var communesLayer = L.geoJson(communes, {
+
                             style: function (feature) {
-                                return {
-                                    fillOpacity: 0.2,
-                                    color: "skyblue",
-                                    weight: 1,
-                                    highlight: {
-                                        weight: 3,
-                                        dashArray: '',
-                                        fillOpacity: 0.4
-                                    }
-                                };
+                                return originalStyle;
                             },
                             onEachFeature: function (feature, layer) {
 
@@ -246,31 +251,50 @@
                                 var idRecherche = feature.id;
                                 const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_communes'] === idRecherche);
 
-                                layer.bindPopup(feature.properties.NOM + ' : ' + lignesFiltrees.length + " tournages");
+                                var numTournages = lignesFiltrees.length;
+
+                                var string = ' tournages';
+                                if (numTournages == 1) {
+                                    var string = ' tournage';
+                                }
+                                layer.bindPopup(feature.properties.NOM + ' : ' + numTournages + string);
 
                                 layer.options.originalStyle = layer.options.style(feature);
 
                                 layer.on({
-                                    mouseover: highlightFeature,
-                                    mouseout: resetHighlight
+                                    click: function (e) {
+                                        var layer = e.target;
+                                        console.log(layer);
+                                        if (layer._path.classList.contains('clicked')) {
+                                            layer.setStyle(originalStyle);
+                                            layer._path.classList.remove('clicked');
+
+                                        } else {
+                                            layer.options.originalStyle = layer.options.style;
+                                            layer.setStyle(layer.options.highlight);
+                                            layer._path.classList.add('clicked');
+                                        }
+                                        draw(e);
+                                    },
+                                    mouseover: function (e) {
+                                        var layer = e.target;
+                                        layer.setStyle(layer.options.highlight);
+                                    },
+                                    mouseout: function (e) {
+                                        var layer = e.target;
+                                        //layer.setStyle(originalStyle);
+
+                                        if (!layer._path.classList.contains('clicked')) {
+                                            layer.setStyle(originalStyle);
+                                        }
+                                    },
+
                                 });
+
                             }
                         }).addTo(map);
 
-                        function highlightFeature(e) {
-                            var layer = e.target;
 
-                            layer.setStyle(layer.options.highlight);
-                        }
-
-                        function resetHighlight(e) {
-                            var layer = e.target;
-
-                            // Récupérer le style d'origine de la couche
-                            var originalStyle = layer.options.originalStyle;
-
-                            layer.setStyle(originalStyle);
-                        }
 
                         function showCommunes() {
 
@@ -285,14 +309,15 @@
                             showCommunes();
                         });
 
-                        communesLayer.on('click', function (e) {
-                            // Code à exécuter lorsque l'utilisateur clique sur une commune
+                        function draw(e) {
+                            // Code à exécuter lorsque l'utilisateur clique sur une commune 
 
-                            const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_communes'] === e.layer.feature.id);
+                            e = e.target;
+                            const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_communes'] === e.feature.id);
 
                             var toponyme = 0, route = 0, total = 0;
                             lignesFiltrees.forEach(function (d) {
-                                if (d.id_communes === e.layer.feature.id) {
+                                if (d.id_communes === e.feature.id) {
 
                                     total++;
                                     if (d.id_toponymes) toponyme++;
@@ -364,7 +389,7 @@
                             svg.append("g")
                                 .attr("class", "y axis")
                                 .call(yAxis);
-                        });
+                        };
 
 
                     }
