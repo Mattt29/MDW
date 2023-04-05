@@ -8,10 +8,11 @@
 
     <link rel="stylesheet" href="Leaflet/leaflet.css" />
     <script src="Leaflet/leaflet.js"></script>
+    <script src="d3.min.js"></script>
     <script src="jquery-3.6.4.min.js"></script>
 
-    <link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <!--     <link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.Default.css" /> -->
     <script src="Leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
     <link rel="stylesheet" media="screen" type="text/css" href="style.css" />
@@ -25,10 +26,9 @@
 </head>
 
 <body>
-    <h1>Cartographie des tournages à Montpellier</h1>
 
     <div class="container">
-        <h1>Mon application</h1>
+        <h1>Cartographie des tournages à Montpellier</h1>
         <!-- Nav tabs -->
         <ul class="nav nav-tabs">
             <li><a href="#accueil" data-toggle="tab">Accueil</a></li>
@@ -49,6 +49,25 @@
             <div class="tab-pane active" id="cartographie">
                 <h2>Cartographie</h2>
                 <div id="divmap" style="height: 500px;"></div>
+
+                <div id="popup-info">Cliquer sur un marqueur pour afficher les informations</div>
+
+                <div class="container" id="options">
+                    <div class="centered-element">
+
+                        <input type="checkbox" id="toponymes" checked>
+                        <label for="toponymes">Toponymes</label>
+
+                        <input type="checkbox" id="routes" checked>
+                        <label for="routes">Routes</label>
+
+                        <input type="checkbox" id="communes" checked>
+                        <label for="communes">Communes</label>
+
+                    </div>
+                </div>
+
+                <div id="visu_cartho"></div>
             </div>
 
             <!-- Statistiques Tab -->
@@ -77,20 +96,21 @@
 
     <script type="text/javascript">
 
+        const PATH = "data/"
+
         $.ajax({
-            url: "data/data_tournages_2021_true.json",
+            url: PATH + "data_tournages_2021_true.json",
             dataType: "json",
             success: function (data) {
                 var map = L.map('divmap');
-                map.setView([43.610769, 3.876716], 11);
+                map.setView([43.610769, 3.876716], 12);
                 L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>', maxZoom: 17, minZoom: 9 })
                     .addTo(map);
 
                 $.ajax({
-                    url: "toponymes_corrigé.geojson",
+                    url: PATH + "toponymes_corrigé.geojson",
                     dataType: "json",
                     success: function (topo) {
-                        console.log(topo);
 
                         var filmLayer = L.geoJson(topo, {
                             pointToLayer: function (feature, latlng) {
@@ -107,31 +127,33 @@
                                 //console.log(valeursColonnes.length);
                                 //var valeursColonnes = valeursColonnes.filter(val => val !== '').join('<br>');
                                 var popupContent = '';
+                                var name = '';
                                 valeursColonnes.forEach(function (valeur, indice) {
                                     val = '';
 
                                     valeur.forEach(function (value, index) {
                                         val += colonnesIndices[index] + ':' + value + '</br>';
                                     });
-                                    popupContent += '<p><strong>' + valeursColonnes[indice][3] + ':</strong> ' + val + '</br>' + '</p>';
+                                    name += '<p><strong>' + valeursColonnes[indice][3] + '</strong> '
+                                    popupContent += '<p><strong>' + valeursColonnes[indice][3] + '</strong> ' + '</br>' + val + '</br>' + '</p>';
                                 });
 
-                                var tailleBaseIcone = 20;
-                                var taillePixelParValeur = 1;
+                                var tailleBaseIcone = 12;
+                                var taillePixelParValeur = 1 / 6;
                                 var nombreDeValeurs = valeursColonnes.reduce(function (total, valeur) {
                                     return total + valeur.length;
                                 }, 0);
                                 var tailleIcone = tailleBaseIcone + nombreDeValeurs * taillePixelParValeur;
 
                                 var filmIcon = L.icon({
-                                    iconUrl: "film.png",
+                                    iconUrl: PATH + "Clap_cinema.svg",
                                     iconSize: [tailleIcone, tailleIcone]
                                 })
 
                                 var marker = L.marker(latlng, { icon: filmIcon });
 
                                 marker.on('mouseover', function (e) {
-                                    this.bindTooltip(popupContent).openTooltip();
+                                    this.bindTooltip(name).openTooltip();
                                 });
 
                                 // Afficher un div avec les informations du tournage lorsqu'on clique sur le marqueur
@@ -141,59 +163,216 @@
 
                                 return marker;
                             }
-                        });
+                        }).addTo(map);
 
-                        var clusters = L.markerClusterGroup();
-                        clusters.addLayer(filmLayer);
-                        map.addLayer(clusters);
+
+
+                        function showToponymes() {
+
+                            if ($('#toponymes').prop('checked')) {
+                                filmLayer.addTo(map);
+
+                            } else {
+                                map.removeLayer(filmLayer);
+
+                            }
+                        }
+
+                        $('#toponymes').change(function () {
+                            showToponymes();
+                        });
 
 
                     }
                 });
 
                 $.ajax({
-                    url: "routes_corrigé.geojson",
+                    url: PATH + "routes_corrigé.geojson",
                     dataType: "json",
                     success: function (routes) {
 
-                        L.geoJson(routes, {
+                        var routesLayer = L.geoJson(routes, {
 
                             style: function (feature) {
                                 const idRecherche = feature.id;
                                 const lignes = data.tournages_2021.filter(ligne => ligne['id_routes_nommees'] == idRecherche);
                                 var nbValeurs = lignes.length;
                                 return {
-                                    color: "black",
-                                    weight: nbValeurs * 2
+                                    color: "orange",
+                                    weight: nbValeurs * 2,
+                                    opacity: 0.6
 
                                 };
                             }
 
                         }).addTo(map);
+
+                        function showRoutes() {
+
+                            if ($('#routes').prop('checked')) {
+                                routesLayer.addTo(map);
+                            } else {
+                                map.removeLayer(routesLayer);
+                            }
+                        }
+
+                        $('#routes').change(function () {
+                            showRoutes();
+                        });
                     }
                 });
 
                 $.ajax({
-                    url: "communes_corrigé.geojson",
+                    url: PATH + "communes_corrigé.geojson",
                     dataType: "json",
                     success: function (communes) {
-                        console.log(communes);
 
-                        L.geoJson(communes, {
+                        var communesLayer = L.geoJson(communes, {
                             style: function (feature) {
                                 return {
-                                    opacity: 0.2
+                                    fillOpacity: 0.2,
+                                    color: "skyblue",
+                                    weight: 1,
+                                    highlight: {
+                                        weight: 3,
+                                        dashArray: '',
+                                        fillOpacity: 0.4
+                                    }
                                 };
+                            },
+                            onEachFeature: function (feature, layer) {
+
+                                const colonnesIndices = ["id_communes", "Lieux", "infos compl", "Genre", "Nom_projet", "Nombre_jours", "debut_tourn", "Production", "Realisateur"];
+                                var idRecherche = feature.id;
+                                const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_communes'] === idRecherche);
+
+                                layer.bindPopup(feature.properties.NOM + ' : ' + lignesFiltrees.length + " tournages");
+
+                                layer.options.originalStyle = layer.options.style(feature);
+
+                                layer.on({
+                                    mouseover: highlightFeature,
+                                    mouseout: resetHighlight
+                                });
                             }
                         }).addTo(map);
+
+                        function highlightFeature(e) {
+                            var layer = e.target;
+
+                            layer.setStyle(layer.options.highlight);
+                        }
+
+                        function resetHighlight(e) {
+                            var layer = e.target;
+
+                            // Récupérer le style d'origine de la couche
+                            var originalStyle = layer.options.originalStyle;
+
+                            layer.setStyle(originalStyle);
+                        }
+
+                        function showCommunes() {
+
+                            if ($('#communes').prop('checked')) {
+                                communesLayer.addTo(map);
+                            } else {
+                                map.removeLayer(communesLayer);
+                            }
+                        }
+
+                        $('#communes').change(function () {
+                            showCommunes();
+                        });
+
+                        communesLayer.on('click', function (e) {
+                            // Code à exécuter lorsque l'utilisateur clique sur une commune
+
+                            const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_communes'] === e.layer.feature.id);
+
+                            var toponyme = 0, route = 0, total = 0;
+                            lignesFiltrees.forEach(function (d) {
+                                if (d.id_communes === e.layer.feature.id) {
+
+                                    total++;
+                                    if (d.id_toponymes) toponyme++;
+                                    if (d.id_routes_nommees) route++;
+                                }
+                            });
+
+                            //Définition des dimensions du graphique
+                            var margin = { top: 10, right: 30, bottom: 30, left: 60 },
+                                width = 500 - margin.left - margin.right,
+                                height = 250 - margin.top - margin.bottom;
+
+                            //Définition de l'échelle x
+                            var x = d3.scaleBand()
+                                .range([0, width])
+                                .padding(0.1);
+
+                            //Définition de l'échelle y
+                            var y = d3.scaleLinear()
+                                .range([height, 0]);
+
+                            //Définition de l'axe x
+                            var xAxis = d3.axisBottom(x);
+
+                            //Définition de l'axe y
+                            var yAxis = d3.axisLeft(y)
+                                .ticks(5);
+
+                            // Vérifier si un SVG existe déjà
+                            var svgExist = d3.select("#visu_cartho svg").size() > 0;
+
+                            // Si un SVG existe déjà, le supprimer
+                            if (svgExist) {
+                                d3.select("#visu_cartho svg").remove();
+                            }
+
+                            //Création de l'élément SVG et ajout au DOM
+                            var svg = d3.select("#visu_cartho")
+                                .append("svg")
+                                .attr("width", width + margin.left + margin.right)
+                                .attr("height", height + margin.top + margin.bottom)
+                                .append("g")
+                                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                            //Formatage des données
+                            var dataset = [{ type: "Toponyme", count: toponyme }, { type: "Route", count: route }, { type: "Total", count: total }];
+
+                            //Définition des domaines des échelles
+                            x.domain(dataset.map(function (d) { return d.type; }));
+                            y.domain([0, d3.max(dataset, function (d) { return d.count; })]);
+
+                            //Ajout des barres du graphique
+                            svg.selectAll(".bar")
+                                .data(dataset)
+                                .enter().append("rect")
+                                .attr("class", "bar")
+                                .attr("x", function (d) { return x(d.type); })
+                                .attr("width", x.bandwidth())
+                                .attr("y", function (d) { return y(d.count); })
+                                .attr("height", function (d) { return height - y(d.count); });
+
+                            //Ajout de l'axe x
+                            svg.append("g")
+                                .attr("class", "x axis")
+                                .attr("transform", "translate(0," + height + ")")
+                                .call(xAxis);
+
+                            //Ajout de l'axe y
+                            svg.append("g")
+                                .attr("class", "y axis")
+                                .call(yAxis);
+                        });
+
+
                     }
                 });
             }
         });
 
     </script>
-
-    <div id="popup-info">Cliquer sur un marqueur pour afficher les informations</div>
 
 </body>
 
