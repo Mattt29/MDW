@@ -10,9 +10,10 @@
     <script src="Leaflet/leaflet.js"></script>
     <script src="d3.min.js"></script>
     <script src="jquery-3.6.4.min.js"></script>
+    <script src="./function.js"></script>
 
-    <!--     <link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="Leaflet.markercluster/dist/MarkerCluster.Default.css" /> -->
+    <script type="module"> import "https://cdn.skypack.dev/d3-scale-chromatic@3"; </script>
+
     <script src="Leaflet.markercluster/dist/leaflet.markercluster.js"></script>
 
     <link rel="stylesheet" media="screen" type="text/css" href="style.css" />
@@ -22,13 +23,16 @@
     <!-- Bootstrap JavaScript -->
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 
 </head>
 
 <body>
 
     <div class="container">
-        <h1>Cartographie des tournages à Montpellier</h1>
+        <h1>CART’OCC - Montpellier à l'écran</h1>
         <!-- Nav tabs -->
         <ul class="nav nav-tabs">
             <li><a href="#accueil" data-toggle="tab">Accueil</a></li>
@@ -41,39 +45,475 @@
         <div class="tab-content">
             <!-- Accueil Tab -->
             <div class="tab-pane" id="accueil">
-                <h2>Accueil</h2>
-                <p>Joli accueil</p>
+                <p>
+                    Dans le cadre du projet Valoriser le patrimoine Culturel d’Occitanie au moyen de la web-cartographie
+                    <a href="https://storymaps.arcgis.com/stories/2f72fcab72a2498092fab645f721af62" target="_BLANK">
+                        projet CART.OCC
+                    </a> enrichie
+                    et du marathon du Web 2023, nous vous proposons un site web qui cartographie les tournages de films,
+                    séries, et tout autre
+                    type d’œuvre du 7ème art à Montpellier et ses alentours.
+                    <br>
+                    <br>
+                    Le projet CART.OCC vise, entre autre, à faciliter l’accès au patrimoine culturel régional en
+                    mobilisant la web-cartographie interactive,
+                    sur différentes échelle et période de temps, enrichie de contenus analysés.
+                    <br>
+                    Cette cartographie sera à la fois un outil d’accès à des contenus culturels à forte valeur
+                    touristique et pédagogique,
+                    mais également un outil d’analyse de l’offre culturelle au niveau régional.
+                    <br>
+                    Grâce à ce projet, quelques cartes web ont pu voir le jour comme Histoires de terrains à Sète ou Au
+                    carrefour des ethnographies.
+                    <br>
+                    <br>
+                    Notre contribution à CART.OCC a été via ce site de travailler et de valoriser la base de données des
+                    tournages de film à Montpellier et ses environs entre 1938 et 2007.
+                    <br>
+                    Cette base de données a été obtenu par le Laboratoire d’Études et de Recherches Appliquées en
+                    Sciences Sociales (LERASS)
+                    auprès de la métropole de Montpellier. Ce laboratoire est à l’origine du projet
+                    <a href="https://arcg.is/1eu4Tq" target="_BLANK">
+                        "LE TERRITOIRE MIS EN SCÈNE PAR LES SÉRIES TÉLÉVISÉES"
+                    </a>.
+                    Ce laboratoire a ensuite fait appel dans le cadre de CART.OCC, à LAGAM et l’UMPV3 pour pouvoir
+                    mettre en valeur cette base de données.
+                    <br>
+                    <br>
+                    Ce site est composé de 4 onglets : « Accueil », « Cartographie », « Statistiques » et
+                    « Formulaire ».
+                    <br>
+                    Avec sa carte interactive et sa prise en main accessible en plus d’un onglet regroupant quelques
+                    statistiques,
+                    est autant à destination du grand public que des chercheurs.
+                    <br>
+                    Vous pouvez aussi rajouter, par l’intermédiaire d’un formulaire,
+                    un tournage qui a eu lieu et n’est pas encore renseigné dans la base de données du site.
+                </p>
+
             </div>
 
             <!-- Cartographie Tab -->
             <div class="tab-pane active" id="cartographie">
-                <h2>Cartographie</h2>
-                <div id="divmap" style="height: 500px;"></div>
+                <h2>Cartographie des tournages à Montpellier en 2021</h2>
 
-                <div id="popup-info">Cliquer sur un marqueur pour afficher les informations</div>
+                <div class="container" id="options">
 
+                    <select id="select-communes" multiple style="width: 100%"></select>
+
+                    <select id="select-genres" multiple style="width: 100%"></select>
+
+                    <script type="text/javascript">
+
+                        var PATH = "data/";
+
+
+                        $.ajax({
+                            url: PATH + "communes_corrigé.geojson",
+                            dataType: "json",
+                            success: function (communes) {
+                                const select = document.getElementById("select-communes");
+
+                                communes.features.forEach(function (feature) {
+
+
+                                    //Remplir la fenêtre de sélection de communes
+                                    var option = document.createElement("option");
+                                    option.value = feature.properties.OBJECTID;
+                                    option.text = feature.properties.NOM;
+                                    // Ajouter l'option au select
+                                    select.add(option);
+
+                                    // Faire quelque chose avec l'élément 'commune'
+                                });
+
+
+
+                            }
+                        });
+
+                        $.ajax({
+                            url: PATH + "data_tournages_2021_true.json",
+                            dataType: "json",
+                            success: function (data) {
+
+                                const select = document.getElementById("select-genres");
+                                var list_genres = [];
+
+                                data.tournages_2021.forEach(function (feature) {
+                                    list_genres.push(feature.Genre);
+                                });
+
+                                var genres_to_keep = list_genres.filter(element => element !== '');
+                                genres_to_keep = [...new Set(genres_to_keep)];
+
+                                genres_to_keep.forEach(function (genre) {
+                                    var option = document.createElement("option");
+                                    option.value = genre;
+                                    option.text = genre;
+                                    // Ajouter l'option au select
+                                    select.add(option);
+                                })
+
+                            }
+                        });
+                    </script>
+
+                </div>
+                <div id="carteinfo">
+                    <div id="divmap" style="height: 500px;"></div>
+
+                    <div id="popup-info">Cliquer sur un marqueur pour afficher les informations</div>
+                </div>
                 <div class="container" id="options">
                     <div class="centered-element">
 
-                        <input type="checkbox" id="toponymes" checked>
-                        <label for="toponymes">Toponymes</label>
+                        <input class="form-check-input" type="checkbox" id="toponymes" checked>
+                        <label class="form-check-label" for="toponymes">Lieux</label>
 
-                        <input type="checkbox" id="routes" checked>
-                        <label for="routes">Routes</label>
+                        <input class="form-check-input" type="checkbox" id="routes" checked>
+                        <label class="form-check-label" for="routes">Routes</label>
 
-                        <input type="checkbox" id="communes" checked>
-                        <label for="communes">Communes</label>
+                        <input class="form-check-input" type="checkbox" id="communes" checked>
+                        <label class="form-check-label" for="communes">Communes</label>
 
                     </div>
                 </div>
 
-                <div id="visu_cartho"></div>
+                <div id="visu_cartho" position="relative"></div>
             </div>
 
             <!-- Statistiques Tab -->
             <div class="tab-pane" id="statistiques">
+                <div id="intro">
+                    <p>Nombre de tournages par année</p>
+                </div>
                 <h2>Statistiques</h2>
-                <p>Affichage des statistiques ici...</p>
+                <div id="diag"></div>
+                <div id="divbouton"></div>
+                <script>d3.json("tournages_annee.json").then(function (data) {
+                        // Données
+                        var tournages_par_annee = {};
+
+                        // Pour chaque tournage dans les données, ajouter le nombre de tournages pour l'année correspondante
+                        data.forEach(function (d) {
+                            var annee = d.annee;
+                            if (tournages_par_annee[annee] === undefined) {
+                                tournages_par_annee[annee] = 1;
+                            } else {
+                                tournages_par_annee[annee] += 1;
+                            }
+                        });
+
+                        // Convertir les données en tableau pour D3
+                        var tournages_par_annee_array = [];
+                        for (var annee in tournages_par_annee) {
+                            tournages_par_annee_array.push({ annee: annee, nombre: tournages_par_annee[annee] });
+                        }
+                        console.log(tournages_par_annee_array)
+                        // Ordonner les années en fonction des critères donnés
+                        var annees_speciales = ['1938-2007', '2008-2009', '2009-2010'];
+                        tournages_par_annee_array.sort(function (a, b) {
+                            var aSpecial = annees_speciales.indexOf(a.annee) !== -1;
+                            var bSpecial = annees_speciales.indexOf(b.annee) !== -1;
+                            if (aSpecial && bSpecial) {
+                                return annees_speciales.indexOf(a.annee) - annees_speciales.indexOf(b.annee);
+                            } else if (aSpecial) {
+                                return -1;
+                            } else if (bSpecial) {
+                                return 1;
+                            } else {
+                                return parseInt(a.annee) - parseInt(b.annee);
+                            }
+                        });
+
+                        // Dimensions
+                        var margin = { top: 50, right: 50, bottom: 50, left: 0 },
+                            width = 1200 - margin.left - margin.right,
+                            height = 300 - margin.top - margin.bottom;
+
+                        // Echelle pour les axes
+                        var x = d3.scaleBand()
+                            .range([0, width])
+                            .padding(0.1);
+                        var y = d3.scaleLinear()
+                            .range([height, 0]);
+
+                        // Créer le SVG
+                        var svg = d3.select("#diag").append("svg")
+                            .attr("width", width + margin.left + margin.right)
+                            .attr("height", height + margin.top + margin.bottom)
+                            .append("g")
+                            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+                        // Charger les données
+                        x.domain(tournages_par_annee_array.map(function (d) { return d.annee; }));
+                        y.domain([0, d3.max(tournages_par_annee_array, function (d) { return d.nombre; })]);
+
+                        // Ajouter les barres
+                        var bars = svg.selectAll(".bar")
+                            .data(tournages_par_annee_array)
+                            .enter().append("g")
+                            .attr("class", "bar-group")
+                            .attr("transform", function (d) { return "translate(" + x(d.annee) + ",0)"; });
+
+                        bars.append("rect")
+                            .attr("class", "bar")
+                            .attr("width", x.bandwidth())
+                            .attr("y", function (d) { return y(d.nombre); })
+                            .attr("height", function (d) { return height - y(d.nombre); })
+                            .attr("fill", "teal")
+                            .on("click", function (d) {
+                                // Code à exécuter lorsqu'on clique sur la barre
+                                annee = d.explicitOriginalTarget.__data__.annee;
+                                console.log("Barre cliquée : ");
+                            });
+
+                        bars.append("text")
+                            .attr("class", "bar-text")
+                            .attr("x", x.bandwidth() / 2)
+                            .attr("y", function (d) { return y(d.nombre) - 5; })
+                            .attr("text-anchor", "middle")
+                            .text(function (d) { return d.nombre; });
+
+                        svg.selectAll(".bar-group")
+                            .append("text")
+                            .attr("class", "bar-text")
+                            .attr("x", x.bandwidth() / 2)
+                            .attr("y", function (d) { return y(d.nombre) - 5; })
+                            .attr("text-anchor", "middle")
+                            .text(function (d) { return d.nombre; });
+
+                        svg.append("text")
+                            .attr("x", width / 2)
+                            .attr("y", height + margin.bottom)
+                            .attr("dy", "1em")
+                            .style("text-anchor", "middle")
+                            .text("Années");
+
+                        // utiliser reduce() pour compter le nombre de chaque Type dans les données
+                        var anneeCounts = data.reduce(function (obj, e) {
+                            if (!obj[e.annee]) {
+                                obj[e.annee] = 0;
+                            }
+                            obj[e.annee]++;
+                            return obj;
+                        }, {});
+
+                        var nb_tournages = Object.values(anneeCounts).reduce(function (sum, count) {
+                            return sum + count;
+                        }, 0);
+
+                        var anneeData = [];
+                        Object.keys(anneeCounts).forEach(function (annee) {
+                            anneeData.push({
+                                label: annee,
+                            });
+                        });
+
+                        anneeData.sort(function (a, b) {
+                            return a.label.localeCompare(b.label);
+                        });
+
+                        let types = new Set();
+                        for (let obj of data) {
+                            types.add(obj.Type);
+                        }
+                        let nb_types = types.size;
+
+                        //Vérifier que le label des titres dans le json d'Enzo soit bien correct entre 1936 et 20019 par rapport à 2020/2021
+
+                        let titres = new Set();
+                        for (let obj of data) {
+                            titres.add(obj.Titre);
+                        }
+                        let nb_titres = titres.size;
+
+                        //Vérifier que le label des producteurs dans le json d'Enzo soit bien correct entre 1936 et 20019 par rapport à 2020/2021
+                        let produc = new Set();
+                        for (let obj of data) {
+                            produc.add(obj.Production);
+                        }
+                        let nb_produc = produc.size;
+
+                        introduction = "<p> Voici l'onglet statistique présentant les données des tournages aillant lieu à Montpellier et ses alentours. Il considère les années <strong>"
+                            + anneeData[0].label
+                            + "</strong> jusqu'à <strong>"
+                            + anneeData[anneeData.length - 1].label
+                            + "</strong>. Il a été recensé <strong>"
+                            + nb_tournages
+                            + "</strong> tournages correspondant à <strong>"
+                            + nb_titres
+                            + "</strong> projets différents produits par <strong>"
+                            + nb_produc
+                            + "</strong> producteurs différents. Ces tournages sont représentés au sein de <strong>"
+                            + nb_types
+                            + "</strong> types différents.</p>";
+
+                        document.getElementById("intro").innerHTML = introduction;
+
+
+                        var buttons = d3.select("#divbouton")
+                            .selectAll("button")
+                            .data(anneeData)
+                            .enter()
+                            .append("button")
+                            .text(function (d) { return d.label; })
+                            .attr("class", "btn btn-primary")
+                            .style("width", "73.4px")
+                            .style("margin-right", "4px")
+                            .style("margin-left", "4px")
+                            .style("padding", "0px");
+
+                        // créer la svg
+                        var svg = d3.select("#statistiques")
+                            .append("svg")
+                            .attr("width", "1100px")
+                            .attr("height", "700px")
+                            .attr("margin-top", "400px");
+
+                        // créer un groupe pour les camemberts
+                        var pieGroup = svg.append("g")
+                            .attr("transform", "translate(450,350)");
+
+                        // créer un groupe pour les labels d'année
+                        var labelGroup = svg.append("g")
+                            .attr("transform", "translate(450,350)");
+
+                        // créer un groupe pour la légende
+                        var legendGroup = svg.append("g")
+                            .attr("transform", "translate(700,150)");
+
+                        // fonction pour dessiner le camembert
+                        function drawPieChart(data, label) {
+                            // calculer les comptes de type
+                            var typeCounts = Object.assign({}, {});
+                            var typeCounts = data.reduce(function (obj, d) {
+                                if (!obj[d.Type] && d.annee == label) {
+                                    obj[d.Type] = 0;
+                                }
+                                if (d.annee == label) {
+                                    obj[d.Type]++;
+                                }
+                                return obj;
+                            }, {});
+                            // supprimer les valeurs NaN
+                            typeCounts = Object.fromEntries(
+                                Object.entries(typeCounts).filter(function ([type, count]) {
+
+                                    return count > 0;
+                                })
+                            );
+
+
+                            // créer un tableau de données pour le camembert
+                            var pieData = [];
+                            Object.keys(typeCounts).forEach(function (type) {
+                                pieData.push({
+                                    label: type,
+                                    value: typeCounts[type]
+                                });
+                            });
+                            console.log("pieDataaaa", pieData);
+                            // On trie l'array en ordre décroissant des valeurs
+                            pieData.sort((a, b) => b.value - a.value);
+
+                            // On récupère les 9 premiers objets
+                            const topNine = pieData.slice(0, 9);
+
+                            // On somme les valeurs des objets restants
+                            const otherValue = pieData.slice(9).reduce((acc, curr) => acc + curr.value, 0);
+
+                            // On crée un nouvel objet pour les autres valeurs
+                            const otherObject = { label: "Autre", value: otherValue };
+
+                            // On combine les deux tableaux pour avoir un tableau final avec les 9 objets les plus élevés et l'objet Autre
+                            const newPieData = [...topNine, otherObject];
+
+                            var pie = d3.pie()
+                                .value(function (d) { return d.value; });
+                            var arc = d3.arc()
+                                .innerRadius(0)
+                                .outerRadius(200);
+
+                            var colors = d3.scaleOrdinal(d3.schemeTableau10);
+
+                            var arcs = pieGroup.selectAll(".arc")
+                                .data(pie(newPieData))
+                                .enter()
+                                .append("g")
+                                .attr("class", "arc");
+
+                            arcs.append("path")
+                                .attr("d", arc)
+                                .attr("fill", function (d) { return colors(d.data.label); });
+
+                            arcs.append("text")
+                                .attr("transform", function (d) { return "translate(" + arc.centroid(d) + ")"; })
+                                .attr("text-anchor", "middle")
+                                .text(function (d) {
+                                    var percentage = Math.round(100 * d.data.value / d3.sum(newPieData, function (d) { return d.value; }));
+                                    return percentage + "%";
+
+                                });
+
+
+
+                            // ajouter le label d'année correspondant
+                            labelGroup.append("text")
+                                .attr("class", "year-label")
+                                .attr("text-anchor", "middle")
+                                .attr("y", -250)
+                                .text("Nombre de tournages en fonction du Type à l'année " + label);
+
+
+
+                            // ajouter un élément rectangulaire et un texte pour chaque type de données dans le camembert
+                            var legend = legendGroup.selectAll(".legend")
+                                .data(newPieData)
+                                .enter()
+                                .append("g")
+                                .attr("class", "legend")
+                                .attr("transform", function (d, i) { return "translate(0," + i * 30 + ")"; });
+
+                            legend.append("rect")
+                                .attr("x", 0)
+                                .attr("y", 0)
+                                .attr("width", 20)
+                                .attr("height", 20)
+                                .style("fill", function (d) { return colors(d.label); });
+
+
+                            legend.append("text")
+                                .attr("x", 30)
+                                .attr("y", 10)
+                                .attr("dy", ".35em")
+                                .text(function (d) { return d.label + " (" + d.value + ")"; });
+
+
+
+                        }
+
+                        // dessiner le camembert par défaut pour l'année 2019
+                        drawPieChart(data, "2021");
+
+                        // ajouter un événement clic pour chaque bouton
+                        buttons.on("click", function (d, e) {
+                            // supprimer le camembert et le label d'année précédents
+                            pieGroup.selectAll("*").remove();
+                            labelGroup.selectAll("*").remove();
+                            legendGroup.selectAll("*").remove();
+
+                            // dessiner le nouveau camembert
+                            drawPieChart(data, e.label);
+                        });
+
+
+
+
+
+                    });
+                </script>
             </div>
 
             <!-- Submit Tab -->
@@ -95,307 +535,735 @@
     </div>
 
     <script type="text/javascript">
+        var start = Date.now();
+        console.log("cc");
+        var PATH = "data/"
+        $.ajax({
+            url: PATH + "ancien_geojson/routes_nommées_FeaturesToJSO.geojson",
+            dataType: "json",
+            success: function (data) {
+                console.log("ici");
+                var end = Date.now();
+                console.log(end - start);
+            }
+        });
+        // Création du tableau pour stocker les informations
+        var infoArray = [];
 
-        const PATH = "data/"
+        // Fonction qui ajoute les informations au tableau et les affiche dans le div "popup-info"
+        function addInfo(info) {
+            // Ajout des informations au tableau
+            infoArray.push(info);
+
+            // Affichage des informations dans le div "popup-info"
+            var popupInfo = document.getElementById("popup-info");
+            popupInfo.innerHTML = '<button id="croix" onclick="empty_div()">X</button>';
+
+            for (var i = 0; i < infoArray.length; i++) {
+                if (i == 0) {
+                    popupInfo.innerHTML += infoArray[i] + '<button id="croix" onclick="empty_div()">X</button>' + '<br>';
+                }
+                else {
+                    popupInfo.innerHTML += infoArray[i] + '<br>';
+                }
+            }
+        }
+
+        // Fonction qui supprime les informations du tableau et les réaffiche dans le div "popup-info"
+        function removeInfo(info) {
+            // Suppression des informations du tableau
+            var index = infoArray.indexOf(info);
+
+            if (index !== -1) {
+                infoArray.splice(index, 1);
+            }
+
+            // Réaffichage des informations restantes dans le div "popup-info"
+            var popupInfo = document.getElementById("popup-info");
+            popupInfo.innerHTML = '<button id="croix" onclick="empty_div()">X</button>';
+            if (infoArray.length == 0) {
+                popupInfo.innerHTML = 'Cliquer sur un marqueur pour afficher les informations';
+            }
+            else {
+                popupInfo.innerHTML = '<button id="croix" onclick="empty_div()">X</button>';
+                for (var i = 0; i < infoArray.length; i++) {
+                    popupInfo.innerHTML += infoArray[i] + "<br>";
+                }
+            }
+        }
+        var PATH = "data/"
+
+        const empty_list = [];
+        var communesLayer = null, routesLayer = null, filmLayer = null;
+
+        var map = L.map('divmap');
+        map.setView([43.610769, 3.876716], 12);
+
+        function update_map(ids_communes, genres) {
+            $.ajax({
+                url: PATH + "data_tournages_2021_true.json",
+                dataType: "json",
+                success: function (data) {
+
+                    map.eachLayer(function (layer) {
+                        map.removeLayer(layer);
+                    });
+
+                    L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>', maxZoom: 17, minZoom: 9 })
+                        .addTo(map);
+
+                    var id_topo_to_keep_communes = [];
+                    var id_topo_to_keep_genres = [];
+                    var id_topo_to_keep = [];
+                    var myList = [];
+                    var filteredList = [];
+
+
+                    if (ids_communes.length != 0) {
+                        data.tournages_2021 = data.tournages_2021.filter(ligne => ids_communes.includes(ligne['id_communes']));
+                        myList = data.tournages_2021.map(ligne => ligne["id_toponymes"]);
+                        filteredList = myList.filter(element => element !== '');
+
+                        // Utiliser Set() pour supprimer les doublons
+                        id_topo_to_keep_communes = [...new Set(filteredList)];
+
+                    }
+
+                    if (genres.length != 0) {
+                        data.tournages_2021 = data.tournages_2021.filter(ligne => genres.includes(ligne['Genre']));
+                        myList = data.tournages_2021.map(ligne => ligne["id_toponymes"]);
+                        filteredList = myList.filter(element => element !== '');
+
+                        // Utiliser Set() pour supprimer les doublons
+                        id_topo_to_keep_genres = [...new Set(filteredList)];
+                    }
+
+                    if (genres.length != 0) {
+                        if (ids_communes.length != 0) {
+
+                            for (var i = 0; i < id_topo_to_keep_communes.length; i++) {
+                                if (id_topo_to_keep_genres.includes(id_topo_to_keep_communes[i])) {
+                                    id_topo_to_keep.push(id_topo_to_keep_communes[i]);
+                                }
+                            }
+
+                        }
+                        else {
+                            id_topo_to_keep = id_topo_to_keep_genres;
+                            console.log("ici");
+                        }
+
+                    }
+                    else {
+                        if (ids_communes.length != 0) {
+                            id_topo_to_keep = id_topo_to_keep_communes;
+                        }
+                    }
+
+                    $.ajax({
+                        url: PATH + "toponymes_corrigé.geojson",
+                        dataType: "json",
+                        success: function (topo) {
+
+                            if (ids_communes.length != 0 || genres.length != 0) {
+                                topo.features = topo.features.filter(ligne => id_topo_to_keep.includes(ligne['id']));
+                            }
+
+
+
+                            filmLayer = L.geoJson(topo, {
+                                pointToLayer: function (feature, latlng) {
+
+                                    const colonnesIndices = ["Lieux", "infos compl", "Genre", "Nom_projet", "Nombre_jours", "debut_tourn", "Production", "Realisateur"];
+                                    var idRecherche = feature.id;
+
+                                    // Filtrer les lignes correspondantes à l'identifiant recherché
+                                    var lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_toponymes'] === idRecherche);
+
+                                    // Extraire les valeurs des colonnes souhaitées pour les lignes correspondantes
+                                    var valeursColonnes = lignesFiltrees.map(ligne => colonnesIndices.map(indice => ligne[indice]));
+
+                                    //console.log(valeursColonnes.length);
+                                    //var valeursColonnes = valeursColonnes.filter(val => val !== '').join('<br>');
+                                    var popupContent = '';
+                                    var name = '';
+                                    valeursColonnes.forEach(function (valeur, indice) {
+                                        val = '';
+
+                                        valeur.forEach(function (value, index) {
+                                            if (index == 3) {
+                                                name += '<p><strong>' + valeursColonnes[indice][3] + '</strong> ';
+                                            }
+                                            else {
+
+                                                val += colonnesIndices[index] + ' : ' + value + '</br>';
+                                            }
+                                        });
+
+                                        popupContent += '<p><strong>' + valeursColonnes[indice][3] + '</strong> ' + '</br>' + val + '</br>' + '</p>';
+
+                                    });
+
+                                    var tailleBaseIcone = 12;
+                                    var taillePixelParValeur = 1 / 6;
+                                    var nombreDeValeurs = valeursColonnes.reduce(function (total, valeur) {
+                                        return total + valeur.length;
+                                    }, 0);
+                                    var tailleIcone = tailleBaseIcone + nombreDeValeurs * taillePixelParValeur;
+
+                                    var filmIcon = L.icon({
+                                        iconUrl: PATH + "Clap_cinema.svg",
+                                        iconSize: [tailleIcone, tailleIcone]
+                                    })
+
+                                    var marker = L.marker(latlng, { icon: filmIcon, isSelected: false });
+
+                                    marker.on('mouseover', function (e) {
+                                        this.bindTooltip(name).openTooltip();
+                                    });
+
+                                    // Afficher un div avec les informations du tournage lorsqu'on clique sur le marqueur
+                                    marker.on('click', function (e) {
+                                        //document.getElementById("popup-info").innerHTML = popupContent;
+                                        /* this.setIcon(L.icon({
+                                        iconUrl: PATH + "Clap_cinema.svg",
+                                        iconSize: [tailleIcone, tailleIcone], className: 'film-icon'
+                                        
+                                    })); */
+                                        clickedLayer = this
+                                        if (!this.isSelected) {
+                                            this.isSelected = true;
+                                            filmLayer.eachLayer(function (other_layer) {
+                                                //console.log(other_layer.isSelected);
+                                                if (other_layer != clickedLayer && !other_layer.isSelected) {
+                                                    other_layer.setIcon(L.icon({ iconUrl: PATH + "clap-cinema_1.svg" }));
+                                                }
+                                                else if (other_layer == clickedLayer) {
+                                                    addInfo(popupContent);
+                                                    other_layer.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg" }));
+
+                                                }
+                                            });
+
+                                        }
+                                        else {
+                                            this.isSelected = false;
+                                            removeInfo(popupContent);
+                                            var i = 0;
+                                            filmLayer.eachLayer(function (other_layer) {
+
+                                                if (other_layer.isSelected) {
+                                                    i++;
+                                                }
+
+                                            });
+                                            if (i == 0) {
+
+                                                filmLayer.eachLayer(function (other_layer) {
+
+                                                    other_layer.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg" }));
+                                                });
+                                            }
+                                            else {
+                                                this.setIcon(L.icon({ iconUrl: PATH + "clap-cinema_1.svg" }));
+                                            }
+                                            //this.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg", iconSize: [tailleIcone, tailleIcone] }));
+                                        }
+                                    });
+
+                                    return marker;
+                                }
+                            }).addTo(map);
+
+                            filmLayer.reset = function () {
+                                this.eachLayer(function (layer) {
+                                    console.log('hey');
+                                    if (layer.isSelected) {
+                                        layer.isSelected = false;;
+                                    }
+                                    layer.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg" }));
+                                });
+                            };
+
+                        }
+                    });
+
+
+
+                    $.ajax({
+                        url: PATH + "communes_corrigé.geojson",
+                        dataType: "json",
+                        success: function (communes) {
+
+                            var list_id_communes = [];
+
+                            if (ids_communes.length != 0) {
+                                communes.features = communes.features.filter(ligne => ids_communes.includes(ligne['id']));
+                            }
+
+
+                            communesLayer = L.geoJson(communes, {
+
+                                style: function (feature) {
+                                    return {
+                                        fillOpacity: 0.1,
+                                        color: "#72CBF0",
+                                        weight: 1,
+                                        highlight: {
+                                            weight: 4,
+                                            dashArray: ''
+                                        }
+                                    };
+                                },
+                                onEachFeature: function (feature, layer) {
+
+
+                                    const colonnesIndices = ["id_communes", "Lieux", "infos compl", "Genre", "Nom_projet", "Nombre_jours", "debut_tourn", "Production", "Realisateur"];
+                                    var idRecherche = feature.id;
+                                    const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_communes'] === idRecherche);
+
+                                    /* var numTournages = lignesFiltrees.length;
+
+                                    var string = ' tournages';
+                                    if (numTournages == 1) {
+                                        var string = ' tournage';
+                                    }
+                                    layer.bindPopup(feature.properties.NOM + ' : ' + numTournages + string); */
+
+                                    layer.options.originalStyle = layer.options.style(feature);
+
+
+
+                                    layer.on({
+                                        click: function (e) {
+                                            var layer = e.target;
+                                            var id_selected = layer.feature.properties.OBJECTID;
+
+
+                                            if (layer._path.classList.contains('clicked')) {
+                                                const index = list_id_communes.indexOf(id_selected);
+                                                if (index !== -1) {
+                                                    list_id_communes.splice(index, 1);
+                                                }
+                                                layer.setStyle(layer.options.highlight);
+                                                layer._path.classList.remove('clicked');
+
+                                            } else {
+                                                if (!list_id_communes.includes(id_selected)) {
+                                                    list_id_communes.push(id_selected);
+                                                }
+                                                layer.options.originalStyle = layer.options.style;
+                                                layer.setStyle(layer.options.highlight);
+                                                layer._path.classList.add('clicked');
+                                            }
+                                            draw(e, data, list_id_communes);
+                                        },
+                                        mouseover: function (e) {
+                                            var layer = e.target;
+                                            layer.setStyle(layer.options.highlight);
+                                        },
+                                        mouseout: function (e) {
+                                            var layer = e.target;
+                                            //layer.setStyle(originalStyle);
+
+                                            if (!layer._path.classList.contains('clicked')) {
+                                                layer.setStyle(layer.options.style(feature));
+                                            }
+                                        },
+
+                                    });
+
+                                }
+                            }).addTo(map);
+
+
+
+
+                        }
+                    });
+                    $.ajax({
+                        url: PATH + "routes_corrigé.geojson",
+                        dataType: "json",
+                        success: function (routes) {
+
+                            routesLayer = L.geoJson(routes, {
+
+                                onEachFeature: function (feature, layer) {
+
+                                    const colonnesIndices = ["Lieux", "infos compl", "Genre", "Nom_projet", "Nombre_jours", "debut_tourn", "Production", "Realisateur"];
+                                    var idRecherche = feature.id;
+
+                                    // Filtrer les lignes correspondantes à l'identifiant recherché
+                                    const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_routes_nommees'] === idRecherche);
+
+                                    // Extraire les valeurs des colonnes souhaitées pour les lignes correspondantes
+                                    var valeursColonnes = lignesFiltrees.map(ligne => colonnesIndices.map(indice => ligne[indice]));
+
+                                    //console.log(valeursColonnes.length);
+                                    //var valeursColonnes = valeursColonnes.filter(val => val !== '').join('<br>');
+                                    var popupContent = '';
+                                    var name = '';
+                                    valeursColonnes.forEach(function (valeur, indice) {
+                                        val = '';
+
+                                        valeur.forEach(function (value, index) {
+
+                                            if (index == 3) {
+                                                name += '<p><strong>' + valeursColonnes[indice][3] + '</strong> '
+                                            }
+                                            else {
+                                                val += colonnesIndices[index] + ' : ' + value + '</br>';
+                                            }
+
+                                        });
+
+                                        popupContent += '<p><strong>' + valeursColonnes[indice][3] + '</strong> ' + '</br>' + val + '</br>' + '</p>';
+
+
+
+                                    });
+                                    //[name, popupContent, valeursColonnes] = infos_tournage(feature, data, "id_routes_nommees")
+
+                                    //console.log(name);
+                                    //console.log(popupContent);
+
+                                    //layer.bindTooltip(name);
+                                    layer.on('mouseover', function () {
+                                        this.bindTooltip(name).openTooltip();
+                                    });
+                                    // Appliquer la ligne "document.getElementById("popup-info").innerHTML = popupContent;" lorsque la route est cliquée
+                                    layer.on('click', function (e) {
+                                        //document.getElementById("popup-info").innerHTML = popupContent;
+                                        var layer = e.target;
+                                        var clickedLayer = e.target;
+
+
+                                        if (layer._path.classList.contains('clicked')) {
+                                            removeInfo(popupContent);
+
+                                            //layer.setStyle(layer.options.style(feature));
+
+                                            //clickedLayer.setStyle(clickedLayer.options.notClicked);
+                                            layer._path.classList.remove('clicked');
+
+                                            var i = 0;
+                                            routesLayer.eachLayer(function (other_layer) {
+
+                                                if (other_layer._path.classList.contains('clicked')) {
+                                                    i++;
+                                                }
+
+                                            });
+                                            console.log(i);
+
+                                            if (i == 0) {
+                                                console.log('yo');
+                                                routesLayer.eachLayer(function (other_layer) {
+                                                    console.log('hey');
+                                                    other_layer.setStyle(other_layer.options.Clicked);
+                                                });
+                                            }
+                                            else {
+                                                layer.setStyle(layer.options.notClicked);
+                                            }
+
+                                        } else {
+                                            //layer.options.originalStyle = layer.options.style;
+                                            routesLayer.eachLayer(function (other_layer) {
+                                                if (other_layer !== clickedLayer && !other_layer._path.classList.contains('clicked')) {
+                                                    other_layer.setStyle(other_layer.options.notClicked);
+                                                } else if (other_layer == clickedLayer) {
+                                                    addInfo(popupContent);
+                                                    layer._path.classList.add('clicked');
+                                                    layer.setStyle(layer.options.Clicked);
+                                                }
+                                            });
+                                        }
+
+
+                                    });
+
+                                },
+                                style: function (feature) {
+                                    const idRecherche = feature.id;
+                                    const lignes = data.tournages_2021.filter(ligne => ligne['id_routes_nommees'] == idRecherche);
+                                    var nbValeurs = lignes.length;
+                                    return {
+                                        color: "orange",
+                                        weight: nbValeurs * 2,
+                                        opacity: 0.8,
+                                        Clicked: {
+                                            color: "orange",
+                                            opacity: 0.8
+                                        },
+                                        notClicked: {
+                                            color: "gray",
+                                            opacity: 0.5
+                                        }
+                                    };
+                                }
+
+                            }).addTo(map);
+
+                            routesLayer.reset = function () {
+                                this.eachLayer(function (alayer) {
+                                    console.log('hey');
+                                    if (alayer._path.classList.contains('clicked')) {
+                                        alayer._path.classList.remove('clicked');
+                                    }
+                                    alayer.setStyle(alayer.options.Clicked);
+                                });
+                            };
+
+                        }
+                    });
+
+
+
+                }
+            });
+
+        };
+
+
+        update_map(empty_list, empty_list);
+
+        // Initialiser Select2 sur l'élément select
+        $('#select-communes').select2({
+            placeholder: 'Sélectionner les communes à afficher',
+            allowClear: false
+
+
+        });
+
+        var selectCommunes = [];
+        var selectGenre = []
+
+        $('#select-communes').change(function () {
+            // Récupérer l'élément select
+            var selectElement = document.getElementById("select-communes");
+            // Récupérer les options sélectionnées
+            var selectedOptions = [];
+            for (var i = 0; i < selectElement.selectedOptions.length; i++) {
+                selectedOptions.push(parseInt(selectElement.selectedOptions[i].value));
+            }
+
+            selectCommunes = selectedOptions;
+
+            // Mettre à jour la map
+            update_map(selectCommunes, selectGenre);
+
+        });
+
+        $('#select-genres').select2({
+            placeholder: 'Sélectionner les genres à afficher',
+            allowClear: false
+
+        });
+
+        $('#select-genres').change(function () {
+            // Récupérer l'élément select
+            var selectElement = document.getElementById("select-genres");
+            // Récupérer les options sélectionnées
+            var selectedOptions = [];
+            for (var i = 0; i < selectElement.selectedOptions.length; i++) {
+                selectedOptions.push(selectElement.selectedOptions[i].value);
+            }
+
+            selectGenre = selectedOptions;
+
+            // Mettre à jour la map
+            update_map(selectCommunes, selectGenre);
+
+        });
+
+
+        $('#toponymes').change(function () {
+            showToponymes();
+        });
+
+        $('#routes').change(function () {
+            showRoutes();
+        });
+
+        $('#communes').change(function () {
+            showCommunes();
+        });
+
+        /*Legend specific*/
+        var legend = L.control({ position: "bottomleft" });
+
+        legend.onAdd = function (map) {
+            var div = L.DomUtil.create("div", "legend");
+            div.innerHTML += "<h4>Légende</h4>";
+            div.innerHTML += '<div style="display:flex; align-items:center;"><img src="data/Clap_cinema.svg" width="13" height="13"><div style="background-color: orange; height: 5px; border-radius: 10px; margin: 10px 0; width: ' + 40 + 'px; height: 6px; opacity :0.8;margin-right: 5px;margin-left: 5px;"></div><span>1 tournage</span></div>';
+            div.innerHTML += '<div style="display:flex; align-items:center;"><img src="data/Clap_cinema.svg" width="20" height="20"><div style="background-color: orange; height: 5px; border-radius: 10px; margin: 10px 0; width: ' + 40 + 'px; height: 13px;opacity :0.8; margin-right: 5px;margin-left: 5px;"></div><span>2 - 10 tournages</span></div>';
+            div.innerHTML += '<div style="display:flex; align-items:center;"><img src="data/Clap_cinema.svg" width="27" height="27"><div style="background-color: orange; height: 5px; border-radius: 10px; margin: 10px 0; width: ' + 40 + 'px; height: 23px;opacity :0.8; margin-right: 5px;margin-left: 5px;"></div><span>+10 tournages</span></div>';
+
+
+            return div;
+        };
+
+        legend.addTo(map);
+
+        L.control.scale({ position: "bottomright" }).addTo(map);
 
         $.ajax({
             url: PATH + "data_tournages_2021_true.json",
             dataType: "json",
             success: function (data) {
-                var map = L.map('divmap');
-                map.setView([43.610769, 3.876716], 12);
-                L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attributions">CARTO</a>', maxZoom: 17, minZoom: 9 })
-                    .addTo(map);
+                var total = 0, complet = 0, partiel = 0, manquant = 0;
 
-                $.ajax({
-                    url: PATH + "toponymes_corrigé.geojson",
-                    dataType: "json",
-                    success: function (topo) {
+                data.tournages_2021.forEach(function (d) {
 
-                        var filmLayer = L.geoJson(topo, {
-                            pointToLayer: function (feature, latlng) {
+                    total++;
+                    if (d.id_toponymes && d.id_routes_nommees) complet++;
+                    else if (d.id_routes_nommees || d.id_toponymes) partiel++;
+                    else manquant++;
 
-                                const colonnesIndices = ["Lieux", "infos compl", "Genre", "Nom_projet", "Nombre_jours", "debut_tourn", "Production", "Realisateur"];
-                                var idRecherche = feature.id;
-
-                                // Filtrer les lignes correspondantes à l'identifiant recherché
-                                const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_toponymes'] === idRecherche);
-
-                                // Extraire les valeurs des colonnes souhaitées pour les lignes correspondantes
-                                var valeursColonnes = lignesFiltrees.map(ligne => colonnesIndices.map(indice => ligne[indice]));
-
-                                //console.log(valeursColonnes.length);
-                                //var valeursColonnes = valeursColonnes.filter(val => val !== '').join('<br>');
-                                var popupContent = '';
-                                var name = '';
-                                valeursColonnes.forEach(function (valeur, indice) {
-                                    val = '';
-
-                                    valeur.forEach(function (value, index) {
-                                        val += colonnesIndices[index] + ':' + value + '</br>';
-                                    });
-                                    name += '<p><strong>' + valeursColonnes[indice][3] + '</strong> '
-                                    popupContent += '<p><strong>' + valeursColonnes[indice][3] + '</strong> ' + '</br>' + val + '</br>' + '</p>';
-                                });
-
-                                var tailleBaseIcone = 12;
-                                var taillePixelParValeur = 1 / 6;
-                                var nombreDeValeurs = valeursColonnes.reduce(function (total, valeur) {
-                                    return total + valeur.length;
-                                }, 0);
-                                var tailleIcone = tailleBaseIcone + nombreDeValeurs * taillePixelParValeur;
-
-                                var filmIcon = L.icon({
-                                    iconUrl: PATH + "Clap_cinema.svg",
-                                    iconSize: [tailleIcone, tailleIcone]
-                                })
-
-                                var marker = L.marker(latlng, { icon: filmIcon });
-
-                                marker.on('mouseover', function (e) {
-                                    this.bindTooltip(name).openTooltip();
-                                });
-
-                                // Afficher un div avec les informations du tournage lorsqu'on clique sur le marqueur
-                                marker.on('click', function (e) {
-                                    document.getElementById("popup-info").innerHTML = popupContent;
-                                });
-
-                                return marker;
-                            }
-                        }).addTo(map);
-
-                        L.control.scale().addTo(map);
-
-
-
-                        function showToponymes() {
-
-                            if ($('#toponymes').prop('checked')) {
-                                filmLayer.addTo(map);
-
-                            } else {
-                                map.removeLayer(filmLayer);
-
-                            }
-                        }
-
-                        $('#toponymes').change(function () {
-                            showToponymes();
-                        });
-
-
-                    }
                 });
 
-                $.ajax({
-                    url: PATH + "routes_corrigé.geojson",
-                    dataType: "json",
-                    success: function (routes) {
+                var margin = { top: 10, right: 0, bottom: 30, left: 0 },
+                    width = 2500 - margin.left - margin.right,
+                    height = 250 - margin.top - margin.bottom;
 
-                        var routesLayer = L.geoJson(routes, {
+                var svg = d3.select("#visu_cartho")
+                    .append("svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
-                            style: function (feature) {
-                                const idRecherche = feature.id;
-                                const lignes = data.tournages_2021.filter(ligne => ligne['id_routes_nommees'] == idRecherche);
-                                var nbValeurs = lignes.length;
-                                return {
-                                    color: "orange",
-                                    weight: nbValeurs * 2,
-                                    opacity: 0.6
+                var scale = d3.scaleLinear()
+                    .domain([0, complet + partiel + manquant])
+                    .range([0, document.getElementById("visu_cartho").clientWidth]);
 
-                                };
-                            }
+                function updateScaleRange() {
+                    scale.range([0, document.getElementById("visu_cartho").clientWidth]);
+                    update_graphique();
+                }
 
-                        }).addTo(map);
+                window.addEventListener('resize', updateScaleRange);
 
-                        function showRoutes() {
+                function update_graphique() {
 
-                            if ($('#routes').prop('checked')) {
-                                routesLayer.addTo(map);
-                            } else {
-                                map.removeLayer(routesLayer);
-                            }
-                        }
+                    // Vérifier si un SVG existe déjà
+                    var svgExist = d3.select("#visu_cartho svg").size() > 0;
 
-                        $('#routes').change(function () {
-                            showRoutes();
-                        });
+                    // Si un SVG existe déjà, le supprimer
+                    if (svgExist) {
+                        d3.select("#visu_cartho svg").remove();
                     }
-                });
 
-                $.ajax({
-                    url: PATH + "communes_corrigé.geojson",
-                    dataType: "json",
-                    success: function (communes) {
+                    var svg = d3.select("#visu_cartho")
+                        .append("svg")
+                        .attr("width", width + margin.left + margin.right)
+                        .attr("height", height + margin.top + margin.bottom)
+                        .append("g")
+                        .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
 
-                        var originalStyle = {
-                            fillOpacity: 0.1,
-                            color: "skyblue",
-                            weight: 1,
-                            highlight: {
-                                weight: 4,
-                                dashArray: ''
-                            }
-                        };
+                    var scale = d3.scaleLinear()
+                        .domain([0, complet + partiel + manquant])
+                        .range([0, document.getElementById("visu_cartho").clientWidth]);
 
+                    svg.append("text")
+                        .attr("x", 0)
+                        .attr("y", 0)
+                        .text("Affichage des données de toutes les communes")
+                        .style("font-weight", "bold");
 
-                        var communesLayer = L.geoJson(communes, {
+                    svg.append("rect")
+                        .attr("x", 0)
+                        .attr("y", 5)
+                        .attr("width", scale(complet))
+                        .attr("height", 50)
+                        .style("fill", "#6ec4a9")
+                        .attr("position", "relative");
 
-                            style: function (feature) {
-                                return originalStyle;
-                            },
-                            onEachFeature: function (feature, layer) {
+                    svg.append("text")
+                        .attr("x", scale(complet) / 2)
+                        .attr("y", 35)
+                        .text(complet)
+                        .style("font-weight", "bold");
 
-                                const colonnesIndices = ["id_communes", "Lieux", "infos compl", "Genre", "Nom_projet", "Nombre_jours", "debut_tourn", "Production", "Realisateur"];
-                                var idRecherche = feature.id;
-                                const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_communes'] === idRecherche);
+                    svg.append("rect")
+                        .attr("x", scale(complet) + 1)
+                        .attr("y", 5)
+                        .attr("width", scale(partiel))
+                        .attr("height", 50)
+                        .style("fill", "#ff9446");
 
-                                var numTournages = lignesFiltrees.length;
+                    svg.append("text")
+                        .attr("x", scale(complet) + scale(partiel) / 2)
+                        .attr("y", 35)
+                        .text(partiel)
+                        .style("font-weight", "bold");
 
-                                var string = ' tournages';
-                                if (numTournages == 1) {
-                                    var string = ' tournage';
-                                }
-                                layer.bindPopup(feature.properties.NOM + ' : ' + numTournages + string);
+                    svg.append("rect")
+                        .attr("x", scale(complet + partiel) + 2)
+                        .attr("y", 5)
+                        .attr("width", scale(manquant))
+                        .attr("height", 50)
+                        .style("fill", "#ef5858");
 
-                                layer.options.originalStyle = layer.options.style(feature);
+                    svg.append("text")
+                        .attr("x", scale(complet + partiel) + scale(manquant) / 2)
+                        .attr("y", 35)
+                        .text(manquant)
+                        .style("font-weight", "bold");
 
-                                layer.on({
-                                    click: function (e) {
-                                        var layer = e.target;
-                                        console.log(layer);
-                                        if (layer._path.classList.contains('clicked')) {
-                                            layer.setStyle(originalStyle);
-                                            layer._path.classList.remove('clicked');
+                    var legend = svg.append("g")
+                        .attr("class", "legend")
+                        .attr("transform", "translate(0," + (height + margin.bottom - 180) + ")");
 
-                                        } else {
-                                            layer.options.originalStyle = layer.options.style;
-                                            layer.setStyle(layer.options.highlight);
-                                            layer._path.classList.add('clicked');
-                                        }
-                                        draw(e);
-                                    },
-                                    mouseover: function (e) {
-                                        var layer = e.target;
-                                        layer.setStyle(layer.options.highlight);
-                                    },
-                                    mouseout: function (e) {
-                                        var layer = e.target;
-                                        //layer.setStyle(originalStyle);
+                    legend.append("rect")
+                        .attr("x", 0)
+                        .attr("width", 20)
+                        .attr("height", 20)
+                        .style("fill", "#6ec4a9");
 
-                                        if (!layer._path.classList.contains('clicked')) {
-                                            layer.setStyle(originalStyle);
-                                        }
-                                    },
+                    legend.append("text")
+                        .attr("x", 30)
+                        .attr("y", 15)
+                        .text("Lieu et route présents");
 
-                                });
+                    legend.append("rect")
+                        .attr("x", 180)
+                        .attr("width", 20)
+                        .attr("height", 20)
+                        .style("fill", "#ff9446");
 
-                            }
-                        }).addTo(map);
+                    legend.append("text")
+                        .attr("x", 210)
+                        .attr("y", 15)
+                        .text("Lieu ou route présent");
 
+                    legend.append("rect")
+                        .attr("x", 360)
+                        .attr("width", 20)
+                        .attr("height", 20)
+                        .style("fill", "#ef5858");
 
+                    legend.append("text")
+                        .attr("x", 390)
+                        .attr("y", 15)
+                        .text("Lieu et route manquants");
 
-                        function showCommunes() {
+                    svg.append("text")
+                        .attr("x", scale((complet + partiel + manquant) * 0.8))
+                        .attr("y", 1)
+                        .text("Total : " + (complet + partiel + manquant) + " tournages sélectionnés")
+                        .style("font-size", "14px")
+                        .style("font-weight", "bold");
+                }
 
-                            if ($('#communes').prop('checked')) {
-                                communesLayer.addTo(map);
-                            } else {
-                                map.removeLayer(communesLayer);
-                            }
-                        }
+                update_graphique();
 
-                        $('#communes').change(function () {
-                            showCommunes();
-                        });
-
-                        function draw(e) {
-                            // Code à exécuter lorsque l'utilisateur clique sur une commune 
-
-                            e = e.target;
-                            const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_communes'] === e.feature.id);
-
-                            var toponyme = 0, route = 0, total = 0;
-                            lignesFiltrees.forEach(function (d) {
-                                if (d.id_communes === e.feature.id) {
-
-                                    total++;
-                                    if (d.id_toponymes) toponyme++;
-                                    if (d.id_routes_nommees) route++;
-                                }
-                            });
-
-                            //Définition des dimensions du graphique
-                            var margin = { top: 10, right: 30, bottom: 30, left: 60 },
-                                width = 500 - margin.left - margin.right,
-                                height = 250 - margin.top - margin.bottom;
-
-                            //Définition de l'échelle x
-                            var x = d3.scaleBand()
-                                .range([0, width])
-                                .padding(0.1);
-
-                            //Définition de l'échelle y
-                            var y = d3.scaleLinear()
-                                .range([height, 0]);
-
-                            //Définition de l'axe x
-                            var xAxis = d3.axisBottom(x);
-
-                            //Définition de l'axe y
-                            var yAxis = d3.axisLeft(y)
-                                .ticks(5);
-
-                            // Vérifier si un SVG existe déjà
-                            var svgExist = d3.select("#visu_cartho svg").size() > 0;
-
-                            // Si un SVG existe déjà, le supprimer
-                            if (svgExist) {
-                                d3.select("#visu_cartho svg").remove();
-                            }
-
-                            //Création de l'élément SVG et ajout au DOM
-                            var svg = d3.select("#visu_cartho")
-                                .append("svg")
-                                .attr("width", width + margin.left + margin.right)
-                                .attr("height", height + margin.top + margin.bottom)
-                                .append("g")
-                                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-                            //Formatage des données
-                            var dataset = [{ type: "Toponyme", count: toponyme }, { type: "Route", count: route }, { type: "Total", count: total }];
-
-                            //Définition des domaines des échelles
-                            x.domain(dataset.map(function (d) { return d.type; }));
-                            y.domain([0, d3.max(dataset, function (d) { return d.count; })]);
-
-                            //Ajout des barres du graphique
-                            svg.selectAll(".bar")
-                                .data(dataset)
-                                .enter().append("rect")
-                                .attr("class", "bar")
-                                .attr("x", function (d) { return x(d.type); })
-                                .attr("width", x.bandwidth())
-                                .attr("y", function (d) { return y(d.count); })
-                                .attr("height", function (d) { return height - y(d.count); });
-
-                            //Ajout de l'axe x
-                            svg.append("g")
-                                .attr("class", "x axis")
-                                .attr("transform", "translate(0," + height + ")")
-                                .call(xAxis);
-
-                            //Ajout de l'axe y
-                            svg.append("g")
-                                .attr("class", "y axis")
-                                .call(yAxis);
-                        };
-
-
-                    }
-                });
             }
+
+
         });
+
 
     </script>
 
