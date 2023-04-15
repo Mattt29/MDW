@@ -1,9 +1,47 @@
+function addInfo(info) {
+
+    infoArray.push(info);
+
+
+    var popupInfo = document.getElementById("popup-info");
+    popupInfo.innerHTML = '<button id="croix" onclick="empty_div()">X</button>';
+
+    for (var i = 0; i < infoArray.length; i++) {
+        if (i == 0) {
+            popupInfo.innerHTML += infoArray[i] + '<button id="croix" onclick="empty_div()">X</button>' + '<br>';
+        }
+        else {
+            popupInfo.innerHTML += infoArray[i] + '<br>';
+        }
+    }
+}
+
+function removeInfo(info) {
+
+    var index = infoArray.indexOf(info);
+
+    if (index !== -1) {
+        infoArray.splice(index, 1);
+    }
+
+
+    var popupInfo = document.getElementById("popup-info");
+    popupInfo.innerHTML = '<button id="croix" onclick="empty_div()">X</button>';
+    if (infoArray.length == 0) {
+        popupInfo.innerHTML = 'Cliquer sur un marqueur pour afficher les informations';
+    }
+    else {
+        popupInfo.innerHTML = '<button id="croix" onclick="empty_div()">X</button>';
+        for (var i = 0; i < infoArray.length; i++) {
+            popupInfo.innerHTML += infoArray[i] + "<br>";
+        }
+    }
+}
 
 
 function empty_div() {
     document.getElementById('popup-info').innerHTML = 'Cliquer sur un marqueur pour afficher les informations';
     infoArray = [];
-    console.log(routesLayer);
     routesLayer.reset();
     filmLayer.reset();
 }
@@ -24,8 +62,7 @@ function infos_tournage(feature, data, niveau) {
         valeur.forEach(function (value, index) {
             val += colonnesIndices[index] + ' : ' + value + '</br>';
         });
-        name += '<p><strong>' + valeursColonnes[indice][3] + '</strong> '
-        //console.log(indice);
+        name += '<p><strong>' + valeursColonnes[indice][3] + '</strong> ';
         if (indice == 0) {
             popupContent += '<p><strong>' + valeursColonnes[indice][3] + '</strong> ' + '<button onclick="empty_div()">X</button>' + '</br>' + val + '</br>' + '</p>';
 
@@ -61,14 +98,15 @@ function showCommunes() {
 
     if ($('#communes').prop('checked')) {
         communesLayer.addTo(map);
+        communesLayer.bringToBack();
     } else {
         map.removeLayer(communesLayer);
     }
 }
 
 function draw(e, data, list_id_communes) {
-    // Code à exécuter lorsque l'utilisateur clique sur une commune 
 
+    
     e = e.target;
 
     var lignesFiltrees = 0;
