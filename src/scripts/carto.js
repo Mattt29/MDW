@@ -1,4 +1,5 @@
 function carto() {
+
     var PATH = "data/"
     $.ajax({
         url: PATH + "ancien_geojson/routes_nommées_FeaturesToJSO.geojson",
@@ -182,23 +183,18 @@ function carto() {
 
                                 // Afficher un div avec les informations du tournage lorsqu'on clique sur le marqueur
                                 marker.on('click', function (e) {
-                                    //document.getElementById("popup-info").innerHTML = popupContent;
-                                    /* this.setIcon(L.icon({
-                                    iconUrl: PATH + "Clap_cinema.svg",
-                                    iconSize: [tailleIcone, tailleIcone], className: 'film-icon'
-                                    
-                                })); */
+
                                     clickedLayer = this
                                     if (!this.isSelected) {
                                         this.isSelected = true;
                                         filmLayer.eachLayer(function (other_layer) {
 
                                             if (other_layer != clickedLayer && !other_layer.isSelected) {
-                                                other_layer.setIcon(L.icon({ iconUrl: PATH + "clap-cinema_1.svg" }));
+                                                other_layer.setIcon(L.icon({ iconUrl: "images/clap-cinema_1.svg",iconSize: other_layer.options.icon.options.iconSize }));
                                             }
                                             else if (other_layer == clickedLayer) {
                                                 addInfo(popupContent);
-                                                other_layer.setIcon(L.icon({ iconUrl:  "images/Clap_cinema.svg" }));
+                                                other_layer.setIcon(L.icon({ iconUrl:  "images/Clap_cinema.svg",iconSize: other_layer.options.icon.options.iconSize }));
 
                                             }
                                         });
@@ -219,13 +215,13 @@ function carto() {
 
                                             filmLayer.eachLayer(function (other_layer) {
 
-                                                other_layer.setIcon(L.icon({ iconUrl: "images/Clap_cinema.svg" }));
+                                                other_layer.setIcon(L.icon({ iconUrl: "images/Clap_cinema.svg",iconSize: other_layer.options.icon.options.iconSize }));
                                             });
                                         }
                                         else {
-                                            this.setIcon(L.icon({ iconUrl: PATH + "clap-cinema_1.svg" }));
+                                            this.setIcon(L.icon({ iconUrl: "images/clap-cinema_1.svg",iconSize: other_layer.options.icon.options.iconSize }));
                                         }
-                                        //this.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg", iconSize: [tailleIcone, tailleIcone] }));
+
                                     }
                                 });
 
@@ -239,7 +235,7 @@ function carto() {
                                 if (layer.isSelected) {
                                     layer.isSelected = false;;
                                 }
-                                layer.setIcon(L.icon({ iconUrl: "images/Clap_cinema.svg" }));
+                                layer.setIcon(L.icon({ iconUrl: "images/Clap_cinema.svg",iconSize: other_layer.options.icon.options.iconSize }));
                             });
                         };
 
@@ -279,14 +275,6 @@ function carto() {
                                 const colonnesIndices = ["id_communes", "Lieux", "infos compl", "Genre", "Nom_projet", "Nombre_jours", "debut_tourn", "Production", "Realisateur"];
                                 var idRecherche = feature.id;
                                 const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_communes'] === idRecherche);
-
-                                /* var numTournages = lignesFiltrees.length;
-
-                                var string = ' tournages';
-                                if (numTournages == 1) {
-                                    var string = ' tournage';
-                                }
-                                layer.bindPopup(feature.properties.NOM + ' : ' + numTournages + string); */
 
                                 layer.options.originalStyle = layer.options.style(feature);
 
@@ -333,6 +321,8 @@ function carto() {
 
                             }
                         }).addTo(map);
+
+                        communesLayer.bringToBack();
 
 
 
@@ -468,9 +458,6 @@ function carto() {
 
                     }
                 });
-
-
-
             }
         });
 
@@ -527,6 +514,36 @@ function carto() {
         update_map(selectCommunes, selectGenre);
 
     });
+
+    function showToponymes() {
+
+        if ($('#toponymes').prop('checked')) {
+            filmLayer.addTo(map);
+    
+        } else {
+            map.removeLayer(filmLayer);
+    
+        }
+    }
+    
+    function showRoutes() {
+    
+        if ($('#routes').prop('checked')) {
+            routesLayer.addTo(map);
+        } else {
+            map.removeLayer(routesLayer);
+        }
+    }
+    
+    function showCommunes() {
+    
+        if ($('#communes').prop('checked')) {
+            communesLayer.addTo(map);
+            communesLayer.bringToBack();
+        } else {
+            map.removeLayer(communesLayer);
+        }
+    }
 
 
     $('#toponymes').change(function () {
@@ -714,5 +731,193 @@ function carto() {
 
 
     });
+
+    function draw(e, data, list_id_communes) {
+
+    
+        e = e.target;
+    
+        var lignesFiltrees = 0;
+        var total = 0, complet = 0, partiel = 0, manquant = 0;
+    
+        if (list_id_communes.length != 0) {
+    
+            lignesFiltrees = data.tournages_2021.filter(ligne => list_id_communes.includes(ligne['id_communes']));
+    
+            lignesFiltrees.forEach(function (d) {
+                if (list_id_communes.includes(d.id_communes)) {
+                    total++;
+                    if (d.id_toponymes && d.id_routes_nommees) complet++;
+                    else if (d.id_routes_nommees || d.id_toponymes) partiel++;
+                    else manquant++;
+                }
+            });
+    
+    
+        }
+    
+        else {
+            const idCommunesUniques = [...new Set(data.tournages_2021.map(item => item.id_communes))];
+    
+            lignesFiltrees = data.tournages_2021;
+    
+            lignesFiltrees.forEach(function (d) {
+                if (idCommunesUniques.includes(d.id_communes)) {
+                    total++;
+                    if (d.id_toponymes && d.id_routes_nommees) complet++;
+                    else if (d.id_routes_nommees || d.id_toponymes) partiel++;
+                    else manquant++;
+                }
+            });
+        }
+    
+        var margin = { top: 10, right: 0, bottom: 30, left: 0 },
+            width = 2500 - margin.left - margin.right,
+            height = 250 - margin.top - margin.bottom;
+    
+        var scale = d3.scaleLinear()
+            .domain([0, complet + partiel + manquant])
+            .range([0, document.getElementById("visu_cartho").clientWidth]);
+    
+        function updateScaleRange() {
+            scale.range([0, document.getElementById("visu_cartho").clientWidth]);
+            update_graphique();
+        }
+    
+        window.addEventListener('resize', updateScaleRange);
+    
+        function update_graphique() {
+    
+            // Vérifier si un SVG existe déjà
+            var svgExist = d3.select("#visu_cartho svg").size() > 0;
+    
+            // Si un SVG existe déjà, le supprimer
+            if (svgExist) {
+                d3.select("#visu_cartho svg").remove();
+            }
+    
+            var svg = d3.select("#visu_cartho")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+    
+            var scale = d3.scaleLinear()
+                .domain([0, complet + partiel + manquant])
+                .range([0, document.getElementById("visu_cartho").clientWidth]);
+            
+            if (list_id_communes.length==0){
+                svg.append("text")
+                .attr("x", 0)
+                .attr("y", 0)
+                .text("Affichage des données de toutes les communes")
+                .style("font-weight", "bold");
+            }
+
+    
+            if (complet != 0) {
+                svg.append("rect")
+                    .attr("x", 0)
+                    .attr("y", 5)
+                    .attr("width", scale(complet))
+                    .attr("height", 50)
+                    .style("fill", "#6ec4a9")
+                    .attr("position", "relative");
+    
+                svg.append("text")
+                    .attr("x", scale(complet) / 2)
+                    .attr("y", 35)
+                    .text(complet)
+                    .style("font-weight", "bold");
+    
+            }
+    
+    
+    
+            if (partiel != 0) {
+                svg.append("rect")
+                    .attr("x", scale(complet) + 1)
+                    .attr("y", 5)
+                    .attr("width", scale(partiel))
+                    .attr("height", 50)
+                    .style("fill", "#ff9446");
+    
+                svg.append("text")
+                    .attr("x", scale(complet) + scale(partiel) / 2)
+                    .attr("y", 35)
+                    .text(partiel)
+                    .style("font-weight", "bold");
+    
+            }
+    
+    
+            if (manquant != 0) {
+                svg.append("rect")
+                    .attr("x", scale(complet + partiel) + 2)
+                    .attr("y", 5)
+                    .attr("width", scale(manquant))
+                    .attr("height", 50)
+                    .style("fill", "#ef5858");
+    
+    
+    
+                svg.append("text")
+                    .attr("x", scale(complet + partiel) + scale(manquant) / 2)
+                    .attr("y", 35)
+                    .text(manquant)
+                    .style("font-weight", "bold");
+            }
+    
+    
+            var legend = svg.append("g")
+                .attr("class", "legend")
+                .attr("transform", "translate(0," + (height + margin.bottom - 180) + ")");
+    
+            legend.append("rect")
+                .attr("x", 0)
+                .attr("width", 20)
+                .attr("height", 20)
+                .style("fill", "#6ec4a9");
+    
+            legend.append("text")
+                .attr("x", 30)
+                .attr("y", 15)
+                .text("Lieu et route présents");
+    
+            legend.append("rect")
+                .attr("x", 180)
+                .attr("width", 20)
+                .attr("height", 20)
+                .style("fill", "#ff9446");
+    
+            legend.append("text")
+                .attr("x", 210)
+                .attr("y", 15)
+                .text("Lieu ou route présent");
+    
+            legend.append("rect")
+                .attr("x", 360)
+                .attr("width", 20)
+                .attr("height", 20)
+                .style("fill", "#ef5858");
+    
+            legend.append("text")
+                .attr("x", 390)
+                .attr("y", 15)
+                .text("Lieu et route manquants");
+    
+            svg.append("text")
+                .attr("x", scale((complet + partiel + manquant) * 0.8))
+                .attr("y", 1)
+                .text("Total : " + (complet + partiel + manquant) + " tournages sélectionnés")
+                .style("font-size", "14px")
+                .style("font-weight", "bold");
+        }
+    
+        update_graphique();
+    
+    
+    };
 
 }
