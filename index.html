@@ -210,7 +210,6 @@
                         for (var annee in tournages_par_annee) {
                             tournages_par_annee_array.push({ annee: annee, nombre: tournages_par_annee[annee] });
                         }
-                        console.log(tournages_par_annee_array)
                         // Ordonner les années en fonction des critères donnés
                         var annees_speciales = ['1938-2007', '2008-2009', '2009-2010'];
                         tournages_par_annee_array.sort(function (a, b) {
@@ -266,7 +265,6 @@
                             .on("click", function (d) {
                                 // Code à exécuter lorsqu'on clique sur la barre
                                 annee = d.explicitOriginalTarget.__data__.annee;
-                                console.log("Barre cliquée : ");
                             });
 
                         bars.append("text")
@@ -414,7 +412,7 @@
                                     value: typeCounts[type]
                                 });
                             });
-                            console.log("pieDataaaa", pieData);
+
                             // On trie l'array en ordre décroissant des valeurs
                             pieData.sort((a, b) => b.value - a.value);
 
@@ -535,62 +533,9 @@
     </div>
 
     <script type="text/javascript">
-        var start = Date.now();
-        console.log("cc");
-        var PATH = "data/"
-        $.ajax({
-            url: PATH + "ancien_geojson/routes_nommées_FeaturesToJSO.geojson",
-            dataType: "json",
-            success: function (data) {
-                console.log("ici");
-                var end = Date.now();
-                console.log(end - start);
-            }
-        });
-        // Création du tableau pour stocker les informations
+        
+        // Création du tableau pour stocker les informations des tournages
         var infoArray = [];
-
-        // Fonction qui ajoute les informations au tableau et les affiche dans le div "popup-info"
-        function addInfo(info) {
-            // Ajout des informations au tableau
-            infoArray.push(info);
-
-            // Affichage des informations dans le div "popup-info"
-            var popupInfo = document.getElementById("popup-info");
-            popupInfo.innerHTML = '<button id="croix" onclick="empty_div()">X</button>';
-
-            for (var i = 0; i < infoArray.length; i++) {
-                if (i == 0) {
-                    popupInfo.innerHTML += infoArray[i] + '<button id="croix" onclick="empty_div()">X</button>' + '<br>';
-                }
-                else {
-                    popupInfo.innerHTML += infoArray[i] + '<br>';
-                }
-            }
-        }
-
-        // Fonction qui supprime les informations du tableau et les réaffiche dans le div "popup-info"
-        function removeInfo(info) {
-            // Suppression des informations du tableau
-            var index = infoArray.indexOf(info);
-
-            if (index !== -1) {
-                infoArray.splice(index, 1);
-            }
-
-            // Réaffichage des informations restantes dans le div "popup-info"
-            var popupInfo = document.getElementById("popup-info");
-            popupInfo.innerHTML = '<button id="croix" onclick="empty_div()">X</button>';
-            if (infoArray.length == 0) {
-                popupInfo.innerHTML = 'Cliquer sur un marqueur pour afficher les informations';
-            }
-            else {
-                popupInfo.innerHTML = '<button id="croix" onclick="empty_div()">X</button>';
-                for (var i = 0; i < infoArray.length; i++) {
-                    popupInfo.innerHTML += infoArray[i] + "<br>";
-                }
-            }
-        }
         var PATH = "data/"
 
         const empty_list = [];
@@ -650,7 +595,6 @@
                         }
                         else {
                             id_topo_to_keep = id_topo_to_keep_genres;
-                            console.log("ici");
                         }
 
                     }
@@ -683,8 +627,8 @@
                                     // Extraire les valeurs des colonnes souhaitées pour les lignes correspondantes
                                     var valeursColonnes = lignesFiltrees.map(ligne => colonnesIndices.map(indice => ligne[indice]));
 
-                                    //console.log(valeursColonnes.length);
-                                    //var valeursColonnes = valeursColonnes.filter(val => val !== '').join('<br>');
+
+
                                     var popupContent = '';
                                     var name = '';
                                     valeursColonnes.forEach(function (valeur, indice) {
@@ -710,7 +654,6 @@
                                         return total + valeur.length;
                                     }, 0);
                                     var tailleIcone = tailleBaseIcone + nombreDeValeurs * taillePixelParValeur;
-
                                     var filmIcon = L.icon({
                                         iconUrl: PATH + "Clap_cinema.svg",
                                         iconSize: [tailleIcone, tailleIcone]
@@ -722,25 +665,18 @@
                                         this.bindTooltip(name).openTooltip();
                                     });
 
-                                    // Afficher un div avec les informations du tournage lorsqu'on clique sur le marqueur
                                     marker.on('click', function (e) {
-                                        //document.getElementById("popup-info").innerHTML = popupContent;
-                                        /* this.setIcon(L.icon({
-                                        iconUrl: PATH + "Clap_cinema.svg",
-                                        iconSize: [tailleIcone, tailleIcone], className: 'film-icon'
                                         
-                                    })); */
                                         clickedLayer = this
                                         if (!this.isSelected) {
                                             this.isSelected = true;
                                             filmLayer.eachLayer(function (other_layer) {
-                                                //console.log(other_layer.isSelected);
                                                 if (other_layer != clickedLayer && !other_layer.isSelected) {
-                                                    other_layer.setIcon(L.icon({ iconUrl: PATH + "clap-cinema_1.svg" }));
+                                                    other_layer.setIcon(L.icon({ iconUrl: PATH + "clap-cinema_1.svg",iconSize: other_layer.options.icon.options.iconSize }));
                                                 }
                                                 else if (other_layer == clickedLayer) {
                                                     addInfo(popupContent);
-                                                    other_layer.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg" }));
+                                                    other_layer.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg",iconSize: other_layer.options.icon.options.iconSize }));
 
                                                 }
                                             });
@@ -761,13 +697,12 @@
 
                                                 filmLayer.eachLayer(function (other_layer) {
 
-                                                    other_layer.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg" }));
+                                                    other_layer.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg",iconSize: other_layer.options.icon.options.iconSize }));
                                                 });
                                             }
                                             else {
-                                                this.setIcon(L.icon({ iconUrl: PATH + "clap-cinema_1.svg" }));
+                                                this.setIcon(L.icon({ iconUrl: PATH + "clap-cinema_1.svg",iconSize: this.options.icon.options.iconSize }));
                                             }
-                                            //this.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg", iconSize: [tailleIcone, tailleIcone] }));
                                         }
                                     });
 
@@ -777,11 +712,10 @@
 
                             filmLayer.reset = function () {
                                 this.eachLayer(function (layer) {
-                                    console.log('hey');
                                     if (layer.isSelected) {
                                         layer.isSelected = false;;
                                     }
-                                    layer.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg" }));
+                                    layer.setIcon(L.icon({ iconUrl: PATH + "Clap_cinema.svg",iconSize: layer.options.icon.options.iconSize }));
                                 });
                             };
 
@@ -864,7 +798,6 @@
                                         },
                                         mouseout: function (e) {
                                             var layer = e.target;
-                                            //layer.setStyle(originalStyle);
 
                                             if (!layer._path.classList.contains('clicked')) {
                                                 layer.setStyle(layer.options.style(feature));
@@ -875,6 +808,8 @@
 
                                 }
                             }).addTo(map);
+                            communesLayer.bringToBack();
+
 
 
 
@@ -893,14 +828,11 @@
                                     const colonnesIndices = ["Lieux", "infos compl", "Genre", "Nom_projet", "Nombre_jours", "debut_tourn", "Production", "Realisateur"];
                                     var idRecherche = feature.id;
 
-                                    // Filtrer les lignes correspondantes à l'identifiant recherché
                                     const lignesFiltrees = data.tournages_2021.filter(ligne => ligne['id_routes_nommees'] === idRecherche);
 
-                                    // Extraire les valeurs des colonnes souhaitées pour les lignes correspondantes
                                     var valeursColonnes = lignesFiltrees.map(ligne => colonnesIndices.map(indice => ligne[indice]));
 
-                                    //console.log(valeursColonnes.length);
-                                    //var valeursColonnes = valeursColonnes.filter(val => val !== '').join('<br>');
+                                
                                     var popupContent = '';
                                     var name = '';
                                     valeursColonnes.forEach(function (valeur, indice) {
@@ -922,18 +854,12 @@
 
 
                                     });
-                                    //[name, popupContent, valeursColonnes] = infos_tournage(feature, data, "id_routes_nommees")
-
-                                    //console.log(name);
-                                    //console.log(popupContent);
-
-                                    //layer.bindTooltip(name);
+                                    
                                     layer.on('mouseover', function () {
                                         this.bindTooltip(name).openTooltip();
                                     });
-                                    // Appliquer la ligne "document.getElementById("popup-info").innerHTML = popupContent;" lorsque la route est cliquée
                                     layer.on('click', function (e) {
-                                        //document.getElementById("popup-info").innerHTML = popupContent;
+
                                         var layer = e.target;
                                         var clickedLayer = e.target;
 
@@ -941,9 +867,7 @@
                                         if (layer._path.classList.contains('clicked')) {
                                             removeInfo(popupContent);
 
-                                            //layer.setStyle(layer.options.style(feature));
-
-                                            //clickedLayer.setStyle(clickedLayer.options.notClicked);
+                                            
                                             layer._path.classList.remove('clicked');
 
                                             var i = 0;
@@ -954,12 +878,9 @@
                                                 }
 
                                             });
-                                            console.log(i);
 
                                             if (i == 0) {
-                                                console.log('yo');
                                                 routesLayer.eachLayer(function (other_layer) {
-                                                    console.log('hey');
                                                     other_layer.setStyle(other_layer.options.Clicked);
                                                 });
                                             }
@@ -968,7 +889,7 @@
                                             }
 
                                         } else {
-                                            //layer.options.originalStyle = layer.options.style;
+
                                             routesLayer.eachLayer(function (other_layer) {
                                                 if (other_layer !== clickedLayer && !other_layer._path.classList.contains('clicked')) {
                                                     other_layer.setStyle(other_layer.options.notClicked);
@@ -1007,13 +928,13 @@
 
                             routesLayer.reset = function () {
                                 this.eachLayer(function (alayer) {
-                                    console.log('hey');
                                     if (alayer._path.classList.contains('clicked')) {
                                         alayer._path.classList.remove('clicked');
                                     }
                                     alayer.setStyle(alayer.options.Clicked);
                                 });
                             };
+
 
                         }
                     });
