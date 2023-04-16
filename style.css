@@ -7,8 +7,6 @@
 
  #popup-info {
 
- 	/* right: 0px;
- 	left: 80%; */
  	z-index: 1000;
  	background-color: white;
  	border: 1px solid black;
@@ -30,30 +28,13 @@
  	display: flex;
  }
 
- .film-icon-clicked {
- 	/* border: 2px solid rgb(255, 80, 136); */
- 	fill: blue;
- 	/* border-radius: 50%;
-	box-sizing: border-box; */
- }
-
- .film-icon-not-clicked {
- 	border: None;
-
- }
-
  #croix {
  	position: absolute;
  	top: 0px;
  	right: 0px;
  }
 
- html,
- body {
- 	height: 100%;
- }
 
- /*Setup*/
  html,
  body {
  	padding: 0;
@@ -73,8 +54,6 @@
  	font: 14px Arial, Helvetica, sans-serif;
  	background: white;
  	background: rgba(255, 255, 255, 0.8);
- 	/*box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);*/
- 	/*border-radius: 5px;*/
  	line-height: 24px;
  	color: #555;
  }
