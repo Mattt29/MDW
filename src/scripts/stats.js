@@ -72,7 +72,7 @@ function stats() {
             .attr("width", x.bandwidth())
             .attr("y", function (d) { return y(d.nombre); })
             .attr("height", function (d) { return height - y(d.nombre); })
-            .attr("fill", "teal")
+            .attr("fill", "#e6bc29")
             .on("click", function (d) {
                 // Code à exécuter lorsqu'on clique sur la barre
                 annee = d.explicitOriginalTarget.__data__.annee;
@@ -170,6 +170,8 @@ function stats() {
             .append("button")
             .text(function (d) { return d.label; })
             .attr("class", "btn btn-primary")
+            .style("background-color","#b28500")
+            .style("border-color","#b28500")
             .style("width", "73.4px")
             .style("margin-right", "4px")
             .style("margin-left", "4px")

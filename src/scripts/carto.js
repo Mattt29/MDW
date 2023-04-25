@@ -219,7 +219,7 @@ function carto() {
                             style: function (feature) {
                                 return {
                                     fillOpacity: 0.1,
-                                    color: "#72CBF0",
+                                    color: "#3b3b3b",
                                     weight: 1,
                                     highlight: {
                                         weight: 4,
@@ -350,12 +350,12 @@ function carto() {
                                 const lignes = data.tournages_2021.filter(ligne => ligne['id_routes_nommees'] == idRecherche);
                                 var nbValeurs = lignes.length;
                                 return {
-                                    color: "orange",
+                                    color: "#e6bc29",
                                     weight: nbValeurs * 2,
-                                    opacity: 0.8,
+                                    opacity: 1,
                                     Clicked: {
-                                        color: "orange",
-                                        opacity: 0.8
+                                        color: "#e6bc29",
+                                        opacity: 1
                                     },
                                     notClicked: {
                                         color: "gray",
@@ -488,9 +488,9 @@ function carto() {
 
     legend.onAdd = function () {
         var div = L.DomUtil.create("div", "legend");
-        div.innerHTML += '<div style="display:flex; align-items:center;"><img src="images/Clap_cinema.svg" width="13" height="13"><div style="background-color: orange; height: 5px; border-radius: 10px; margin: 10px 0; width: ' + 40 + 'px; height: 6px; opacity :0.8;margin-right: 5px;margin-left: 5px;"></div><span>1 tournage</span></div>';
-        div.innerHTML += '<div style="display:flex; align-items:center;"><img src="images/Clap_cinema.svg" width="20" height="20"><div style="background-color: orange; height: 5px; border-radius: 10px; margin: 10px 0; width: ' + 40 + 'px; height: 13px;opacity :0.8; margin-right: 5px;margin-left: 5px;"></div><span>2 - 10 tournages</span></div>';
-        div.innerHTML += '<div style="display:flex; align-items:center;"><img src="images/Clap_cinema.svg" width="27" height="27"><div style="background-color: orange; height: 5px; border-radius: 10px; margin: 10px 0; width: ' + 40 + 'px; height: 23px;opacity :0.8; margin-right: 5px;margin-left: 5px;"></div><span>+10 tournages</span></div>';
+        div.innerHTML += '<div style="display:flex; align-items:center;"><img src="images/Clap_cinema.svg" width="13" height="13"><div style="background-color: #e6bc29; height: 5px; border-radius: 10px; margin: 10px 0; width: ' + 40 + 'px; height: 6px; opacity :0.8;margin-right: 5px;margin-left: 5px;"></div><span>1 tournage</span></div>';
+        div.innerHTML += '<div style="display:flex; align-items:center;"><img src="images/Clap_cinema.svg" width="20" height="20"><div style="background-color: #e6bc29; height: 5px; border-radius: 10px; margin: 10px 0; width: ' + 40 + 'px; height: 13px;opacity :0.8; margin-right: 5px;margin-left: 5px;"></div><span>2 - 10 tournages</span></div>';
+        div.innerHTML += '<div style="display:flex; align-items:center;"><img src="images/Clap_cinema.svg" width="27" height="27"><div style="background-color: #e6bc29; height: 5px; border-radius: 10px; margin: 10px 0; width: ' + 40 + 'px; height: 23px;opacity :0.8; margin-right: 5px;margin-left: 5px;"></div><span>+10 tournages</span></div>';
 
         return div;
     };
